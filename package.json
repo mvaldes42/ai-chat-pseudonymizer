@@ -7,6 +7,7 @@
     "@apollo/client": "^4.2.12",
     "@apollo/server": "^5.5.1",
     "@as-integrations/express5": "^1.1.2",
+    "@graphql-tools/schema": "^10.1.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -15,14 +16,17 @@
     "@types/node": "^16.18.126",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "@types/ws": "^8.18.1",
     "cors": "^2.8.6",
     "express5": "^1.0.0",
     "graphql": "^16.14.2",
+    "graphql-ws": "^6.2.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "ws": "^8.21.3"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -36,6 +40,14 @@
     "extends": [
       "react-app",
       "react-app/jest"
+    ],
+    "overrides": [
+      {
+        "files": ["server/**/*.{js,ts}"],
+        "rules": {
+          "react-hooks/rules-of-hooks": "off"
+        }
+      }
     ]
   },
   "browserslist": {
