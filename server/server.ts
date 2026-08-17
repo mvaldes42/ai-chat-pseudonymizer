@@ -8,42 +8,36 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
 
-// A schema is a collection of type definitions (hence "typeDefs")
-// that together define the "shape" of queries that are executed against
-// your data.
 const typeDefs = `#graphql
-  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
-
-  # This "Book" type defines the queryable fields for every book in our data source.
-  type Book {
-    title: String
-    author: String
+  # GraphQL requires a Query type. health is a simple liveness check.
+  type Query {
+    health: Boolean!
   }
 
-  # The "Query" type is special: it lists all of the available queries that
-  # clients can execute, along with the return type for each. In this
-  # case, the "books" query returns an array of zero or more Books (defined above).
-  type Query {
-    books: [Book]
+  type SendMessageResponse {
+    streamId: ID!
+    content: String!
+  }
+
+  # Client generates streamId, then sends only the already-pseudonymized
+  # message. Original PII must never appear in this payload.
+  type Mutation {
+    sendMessage(streamId: ID!, content: String!): SendMessageResponse!
   }
 `;
 
-const books = [
-  {
-    title: "The Awakening",
-    author: "Kate Chopin",
-  },
-  {
-    title: "City of Glass",
-    author: "Paul Auster",
-  },
-];
-
-// Resolvers define how to fetch the types defined in your schema.
-// This resolver retrieves books from the "books" array above.
 const resolvers = {
   Query: {
-    books: () => books,
+    health: () => true,
+  },
+  Mutation: {
+    sendMessage: (
+      _: any,
+      { streamId, content }: { streamId: string; content: string },
+    ) => {
+      const response = "This is a test response";
+      return { streamId, content: response };
+    },
   },
 };
 

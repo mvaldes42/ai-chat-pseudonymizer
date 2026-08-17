@@ -1,4 +1,3 @@
-import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import {
   MainContainer,
   ChatContainer,
@@ -10,11 +9,45 @@ import {
   ConversationList,
   Conversation,
   ConversationHeader,
-  MessageSeparator,
   Avatar,
 } from "@chatscope/chat-ui-kit-react";
+import { useSendMessageMutation } from "../graphql/useSendMessageMutation";
+import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 export function ChatbotPage() {
+  const [streamId, setStreamId] = useState(uuidv4());
+  const [sendMessage, { data: response, error }] = useSendMessageMutation();
+  const [messageList, setMessageList] = useState<
+    { id: number; content: string; sender: string }[]
+  >([]);
+
+  function addMessage(content: string, sender: string) {
+    setMessageList(
+      (prev: { id: number; content: string; sender: string }[]) => [
+        ...prev,
+        { id: prev?.length + 1 || 0, content, sender },
+      ],
+    );
+  }
+
+  useEffect(() => {
+    if (response?.sendMessage?.content) {
+      addMessage(response?.sendMessage?.content, "OpenAI");
+    }
+  }, [response]);
+
+  function handleSendMessage({
+    streamId,
+    content,
+  }: {
+    streamId: string;
+    content: string;
+  }) {
+    sendMessage({ variables: { streamId, content } });
+    addMessage(content, "User");
+  }
+
   return (
     <div className="w-100 h-100 relative">
       <MainContainer
@@ -49,22 +82,36 @@ export function ChatbotPage() {
             <ConversationHeader.Actions></ConversationHeader.Actions>
           </ConversationHeader>
           <MessageList>
-            <MessageSeparator content="Saturday, 30 November 2019" />
-            <Message
-              model={{
-                direction: "incoming",
-                message: "Hello my friend",
-                position: "single",
-                sender: "OpenAI",
-              }}
-            >
-              <Avatar
-                name="OpenAI"
-                src="https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
-              />
-            </Message>
+            {messageList?.length > 0 &&
+              messageList.map((message) => (
+                <Message
+                  key={message.id}
+                  model={{
+                    direction:
+                      message.sender === "OpenAI" ? "incoming" : "outgoing",
+                    message: message.content,
+                    position: "single",
+                    sender: message.sender,
+                  }}
+                >
+                  <Avatar
+                    name={message.sender}
+                    src={
+                      message.sender === "OpenAI"
+                        ? "https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
+                        : "https://chatscope.io/storybook/react/assets/akane-MXhWvx63.svg"
+                    }
+                  />
+                </Message>
+              ))}
           </MessageList>
-          <MessageInput placeholder="Type message here" attachButton={false} />
+          <MessageInput
+            placeholder="Type message here"
+            attachButton={false}
+            onSend={(message) =>
+              handleSendMessage({ streamId, content: message })
+            }
+          />
         </ChatContainer>
       </MainContainer>
     </div>
