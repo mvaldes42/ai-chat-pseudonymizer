@@ -1,49 +1,57 @@
-# ai-chat-pseudonymizer
-Detects and pseudonymizes sensitive data directly in the user's browser before sending prompts to the AI service. PII mappings remain local, while only pseudonymized data reaches the backend and the AI API. Responses are de-pseudonymized before being displayed.
+# AI Chat Pseudonymizer
 
-# Getting Started with Create React App
+Proof of concept for an AI chatbot that will detect and pseudonymize PII in the browser before sending text to the AI API. Original values stay on the client; only placeholders reach the backend.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a POC, not a production privacy system.
 
-## Available Scripts
+## Current status
 
-In the project directory, you can run:
+The chat UI, GraphQL API, and Redux message store are in place. Sending a message returns a **stub** (`"This is a test response"`). The following are not implemented yet:
 
-### `npm start`
+- Client-side PII detection (Transformers.js / CamemBERT-NER-PII)
+- Local pseudonymization and reverse mapping
+- OpenAI API calls
+- GraphQL subscription streaming
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Stack
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+**Frontend:** React, TypeScript, Create React App, Redux Toolkit, Apollo Client, ChatScope
 
-### `npm test`
+**Backend:** Node.js, TypeScript, Express, Apollo Server, GraphQL
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+No database. Chat state lives in Redux on the client.
 
-### `npm run build`
+## Getting started
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- App: [http://localhost:3000](http://localhost:3000)
+- GraphQL: [http://localhost:4000/graphql](http://localhost:4000/graphql)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+`OPENAI_API_KEY` in `.env` is reserved for a later step; the stub resolver does not use it.
 
-### `npm run eject`
+### Scripts
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+| Command          | Description                                 |
+| ---------------- | ------------------------------------------- |
+| `npm run dev`    | Start GraphQL server and React app together |
+| `npm run server` | Start Apollo Server on port 4000            |
+| `npm start`      | Start the React app on port 3000            |
+| `npm run build`  | Production build of the frontend            |
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Restart `npm run server` (or `npm run dev`) after backend changes; `tsx` does not watch files.
 
-## Learn More
+## Planned flow
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. Detect French PII in the browser with CamemBERT-NER-PII (INT8) via Transformers.js.
+2. Replace entities with placeholders such as `[PERSON_1]` and `[EMAIL_1]`.
+3. Keep the mapping in Redux; send only pseudonymized text to the backend.
+4. Stream the OpenAI response over a GraphQL subscription keyed by `streamId`.
+5. Restore original values in the browser before displaying the reply.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
