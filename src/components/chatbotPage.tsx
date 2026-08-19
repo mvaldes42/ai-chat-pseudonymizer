@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 import { addMessage } from "../store/messagesSlice";
 import type { RootState } from "../store/store";
+import { SendMessageType } from "../types";
 
 export function ChatbotPage() {
   const [streamId, setStreamId] = useState(uuidv4());
@@ -34,13 +35,7 @@ export function ChatbotPage() {
     }
   }, [response, dispatch]);
 
-  function handleSendMessage({
-    streamId,
-    content,
-  }: {
-    streamId: string;
-    content: string;
-  }) {
+  function handleSendMessage({ streamId, content }: SendMessageType) {
     sendMessage({ variables: { streamId, content } });
     dispatch(addMessage({ content, sender: "User" }));
   }

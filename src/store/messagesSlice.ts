@@ -1,14 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-export type ChatMessage = {
-  id: number;
-  content: string;
-  sender: string;
-};
-
-type MessagesState = {
-  messageList: ChatMessage[];
-};
+import type { ChatMessageType, MessagesState } from "../types";
 
 const initialState: MessagesState = {
   messageList: [],
@@ -18,10 +9,7 @@ const messagesSlice = createSlice({
   name: "messages",
   initialState,
   reducers: {
-    addMessage: (
-      state,
-      action: PayloadAction<{ content: string; sender: string }>,
-    ) => {
+    addMessage: (state, action: PayloadAction<Omit<ChatMessageType, "id">>) => {
       state.messageList.push({
         id: state.messageList.length + 1,
         content: action.payload.content,

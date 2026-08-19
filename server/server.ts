@@ -7,24 +7,7 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
-
-const typeDefs = `#graphql
-  # GraphQL requires a Query type. health is a simple liveness check.
-  type Query {
-    health: Boolean!
-  }
-
-  type SendMessageResponse {
-    streamId: ID!
-    content: String!
-  }
-
-  # Client generates streamId, then sends only the already-pseudonymized
-  # message. Original PII must never appear in this payload.
-  type Mutation {
-    sendMessage(streamId: ID!, content: String!): SendMessageResponse!
-  }
-`;
+import { SendMessageType, typeDefs } from "./types";
 
 const resolvers = {
   Query: {
@@ -33,8 +16,8 @@ const resolvers = {
   Mutation: {
     sendMessage: (
       _: any,
-      { streamId, content }: { streamId: string; content: string },
-    ) => {
+      { streamId, content }: SendMessageType,
+    ): SendMessageType => {
       const response = "This is a test response";
       return { streamId, content: response };
     },

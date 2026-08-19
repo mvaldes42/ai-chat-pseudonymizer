@@ -1,21 +1,10 @@
 import { gql, TypedDocumentNode } from "@apollo/client";
 import { useMutation } from "@apollo/client/react";
-
-type SendMessageMutation = {
-  sendMessage: {
-    streamId: string;
-    content: string;
-  };
-};
-
-type SendMessageMutationVariables = {
-  streamId: string;
-  content: string;
-};
+import type { SendMessageMutationType, SendMessageType } from "../types";
 
 const SEND_MESSAGE_MUTATION: TypedDocumentNode<
-  SendMessageMutation,
-  SendMessageMutationVariables
+  SendMessageMutationType,
+  SendMessageType
 > = gql`
   mutation SendMessage($streamId: ID!, $content: String!) {
     sendMessage(streamId: $streamId, content: $content) {
