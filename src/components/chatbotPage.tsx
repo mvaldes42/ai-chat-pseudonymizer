@@ -13,29 +13,26 @@ import {
 } from "@chatscope/chat-ui-kit-react";
 import { useSendMessageMutation } from "../graphql/useSendMessageMutation";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
+import { addMessage } from "../store/messagesSlice";
+import type { RootState } from "../store/store";
 
 export function ChatbotPage() {
   const [streamId, setStreamId] = useState(uuidv4());
-  const [sendMessage, { data: response, error }] = useSendMessageMutation();
-  const [messageList, setMessageList] = useState<
-    { id: number; content: string; sender: string }[]
-  >([]);
-
-  function addMessage(content: string, sender: string) {
-    setMessageList(
-      (prev: { id: number; content: string; sender: string }[]) => [
-        ...prev,
-        { id: prev?.length + 1 || 0, content, sender },
-      ],
-    );
-  }
+  const [sendMessage, { data: response }] = useSendMessageMutation();
+  const dispatch = useDispatch();
+  const messageList = useSelector(
+    (state: RootState) => state.messages.messageList,
+  );
 
   useEffect(() => {
     if (response?.sendMessage?.content) {
-      addMessage(response?.sendMessage?.content, "OpenAI");
+      dispatch(
+        addMessage({ content: response.sendMessage.content, sender: "OpenAI" }),
+      );
     }
-  }, [response]);
+  }, [response, dispatch]);
 
   function handleSendMessage({
     streamId,
@@ -45,7 +42,7 @@ export function ChatbotPage() {
     content: string;
   }) {
     sendMessage({ variables: { streamId, content } });
-    addMessage(content, "User");
+    dispatch(addMessage({ content, sender: "User" }));
   }
 
   return (
