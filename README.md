@@ -8,7 +8,7 @@ This is a POC, not a production privacy system.
 
 The chat UI, GraphQL API, and Redux message store are in place. Sending a message returns a **stub** (`"This is a test response"`). The following are not implemented yet:
 
-- Client-side PII detection (Transformers.js / CamemBERT-NER-PII)
+- Client-side PII detection (Transformers.js / PII Model)
 - Local pseudonymization and reverse mapping
 - OpenAI API calls
 - GraphQL subscription streaming
@@ -49,7 +49,7 @@ Restart `npm run server` (or `npm run dev`) after backend changes; `tsx` does no
 
 ## Planned flow
 
-1. Detect French PII in the browser with CamemBERT-NER-PII (INT8) via Transformers.js.
+1. Detect French PII in the browser with PII Model via Transformers.js.
 2. Replace entities with placeholders such as `[PERSON_1]` and `[EMAIL_1]`.
 3. Keep the mapping in Redux; send only pseudonymized text to the backend.
 4. Stream the OpenAI response over a GraphQL subscription keyed by `streamId`.

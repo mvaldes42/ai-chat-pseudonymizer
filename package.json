@@ -10,6 +10,7 @@
     "@chatscope/chat-ui-kit-react": "^2.1.1",
     "@chatscope/chat-ui-kit-styles": "^1.4.0",
     "@graphql-tools/schema": "^10.1.0",
+    "@huggingface/transformers": "^3.8.1",
     "@reduxjs/toolkit": "^2.12.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
