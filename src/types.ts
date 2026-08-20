@@ -1,20 +1,23 @@
 export type ChatMessageType = {
   id: number;
+  messageId?: string;
   content: string;
   sender: string;
 };
 
 export type MessagesState = {
   messageList: ChatMessageType[];
+  piiMappingList: PiiMappingEntry[];
 };
 
-export type SendMessageType = {
+export type MessageType = {
   streamId: string;
   content: string;
+  messageId?: string;
 };
 
 export type SendMessageMutationType = {
-  sendMessage: SendMessageType;
+  sendMessage: MessageType;
 };
 
 export type TokenType = {
@@ -39,4 +42,12 @@ export type PiiSpanType = {
   end: number;
   value: string;
   placeholder: string;
+};
+
+export type PiiMapping = Record<string, string>;
+
+export type PiiMappingEntry = {
+  id: number;
+  userMessageId: string;
+  mapping: PiiMapping;
 };

@@ -1,4 +1,4 @@
-import { AutoTokenizer, pipeline } from "@huggingface/transformers";
+import { pipeline } from "@huggingface/transformers";
 import { replaceTokens } from "./replaceTokens";
 
 export async function piiDetectAndReplace(content: string) {
@@ -11,20 +11,11 @@ export async function piiDetectAndReplace(content: string) {
     model: string,
   ) => Promise<any>;
 
-  const piiDetector = await loadPipeline("token-classification", model);
-  const tokenizer = await AutoTokenizer.from_pretrained(model);
+  const piiTokensPipeline = await loadPipeline("token-classification", model);
 
-  const tokens = tokenizer
-    .tokenize(content, { add_special_tokens: true })
-    .map((word, index) => ({ index, word }));
+  const piiTokens = await piiTokensPipeline(content);
 
-  const piiTokens = await piiDetector(content);
+  const { result, mapping } = replaceTokens({ content, piiTokens });
 
-  const replacedContent = replaceTokens({ content, tokens, piiTokens });
-
-  console.log("tokens", tokens);
-  console.log("result", piiTokens);
-  console.log("replacedContent", replacedContent);
-
-  return replacedContent;
+  return { result, mapping };
 }

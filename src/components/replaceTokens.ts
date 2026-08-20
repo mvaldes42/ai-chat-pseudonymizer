@@ -1,8 +1,8 @@
 import type {
   NerTokenType,
   PiiGroupType,
+  PiiMapping,
   PiiSpanType,
-  TokenType,
 } from "../types";
 
 function entityType(entity: string): string | null {
@@ -94,19 +94,43 @@ function locateEntities(
   return spans;
 }
 
+function replaceEntities(content: string, spans: PiiSpanType[]): string {
+  let result = "";
+  let last = 0;
+
+  for (const span of spans) {
+    result += content.slice(last, span.start) + span.placeholder;
+    last = span.end;
+  }
+
+  return result + content.slice(last);
+}
+
+function createPiiMapping(spans: PiiSpanType[]): PiiMapping {
+  const mapping: PiiMapping = {};
+
+  for (const span of spans) {
+    mapping[span.placeholder] = span.value;
+  }
+
+  return mapping;
+}
+
 export function replaceTokens({
   content,
-  tokens,
   piiTokens,
 }: {
   content: string;
-  tokens: TokenType[];
   piiTokens: NerTokenType[];
 }) {
-  const result = "";
   const groups = groupEntities(piiTokens);
   const spans = locateEntities(content, groups);
+  const result = replaceEntities(content, spans);
+  const mapping = createPiiMapping(spans);
+
   console.log("groups", groups);
   console.log("spans", spans);
-  return result;
+  console.log("result", result);
+  console.log("mapping", mapping);
+  return { result, mapping };
 }

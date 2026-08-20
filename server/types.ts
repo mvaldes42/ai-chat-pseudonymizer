@@ -1,6 +1,7 @@
 export type SendMessageType = {
   streamId: string;
   content: string;
+  messageId: string;
 };
 
 export const typeDefs = `#graphql
@@ -12,6 +13,7 @@ export const typeDefs = `#graphql
   type SendMessageResponse {
     streamId: ID!
     content: String!
+    messageId: ID!
   }
 
   # Client generates streamId, then sends only the already-pseudonymized

@@ -8,6 +8,7 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
 import { SendMessageType, typeDefs } from "./types";
+import { v4 as uuidv4 } from "uuid";
 
 const resolvers = {
   Query: {
@@ -18,8 +19,9 @@ const resolvers = {
       _: any,
       { streamId, content }: SendMessageType,
     ): SendMessageType => {
+      const messageId = uuidv4();
       const response = "This is a test response";
-      return { streamId, content: response };
+      return { streamId, content: response, messageId };
     },
   },
 };

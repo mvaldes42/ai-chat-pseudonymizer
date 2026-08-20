@@ -15,9 +15,9 @@ import { useSendMessageMutation } from "../graphql/useSendMessageMutation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
-import { addMessage } from "../store/messagesSlice";
+import { addMessage, storePiiMapping } from "../store/messagesSlice";
 import type { RootState } from "../store/store";
-import { SendMessageType } from "../types";
+import { MessageType } from "../types";
 import { piiDetectAndReplace } from "./piiDetectAndReplace";
 
 export function ChatbotPage() {
@@ -31,16 +31,24 @@ export function ChatbotPage() {
   useEffect(() => {
     if (response?.sendMessage?.content) {
       dispatch(
-        addMessage({ content: response.sendMessage.content, sender: "OpenAI" }),
+        addMessage({
+          content: response.sendMessage.content,
+          sender: "OpenAI",
+          messageId: response.sendMessage.messageId,
+        }),
       );
     }
   }, [response, dispatch]);
 
-  async function handleSendMessage({ streamId, content }: SendMessageType) {
-    const pseudonymizedContent = await piiDetectAndReplace(content);
+  async function handleSendMessage({ streamId, content }: MessageType) {
+    const userMessageId = uuidv4();
+    const { result, mapping } = await piiDetectAndReplace(content);
 
-    sendMessage({ variables: { streamId, content: pseudonymizedContent } });
-    dispatch(addMessage({ content: pseudonymizedContent, sender: "User" }));
+    dispatch(storePiiMapping({ userMessageId, mapping }));
+    dispatch(
+      addMessage({ content: result, sender: "User", messageId: userMessageId }),
+    );
+    sendMessage({ variables: { streamId, content: result } });
   }
 
   return (
@@ -80,7 +88,7 @@ export function ChatbotPage() {
             {messageList?.length > 0 &&
               messageList.map((message) => (
                 <Message
-                  key={message.id}
+                  key={message.messageId || message.id}
                   model={{
                     direction:
                       message.sender === "OpenAI" ? "incoming" : "outgoing",
