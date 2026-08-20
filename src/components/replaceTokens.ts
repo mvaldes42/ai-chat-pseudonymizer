@@ -20,13 +20,21 @@ function groupEntities(piiTokens: NerTokenType[]): PiiGroupType[] {
     if (!type) {
       continue;
     }
+    // we need to keep a count of the number of occurrences of each type
+    const count = groups.filter((group) => group.type === type).length + 1;
+    const placeholder = `[${type}_${count}]`; // Number per type (PERSON_1,EMAIL_1, PERSON_2, …).
 
     const last = groups[groups.length - 1];
     const startsGroup =
       token.entity.startsWith("B-") || !last || last.type !== type;
 
     if (startsGroup) {
-      groups.push({ type, words: [token.word], indexes: [token.index] });
+      groups.push({
+        type,
+        words: [token.word],
+        indexes: [token.index],
+        placeholder,
+      });
     } else {
       last.words.push(token.word);
       last.indexes.push(token.index);
@@ -79,6 +87,7 @@ function locateEntities(
       start,
       end,
       value: content.slice(start, end),
+      placeholder: group.placeholder,
     });
   }
 

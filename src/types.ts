@@ -30,6 +30,7 @@ export type PiiGroupType = {
   type: string;
   words: string[];
   indexes: number[];
+  placeholder: string;
 };
 
 export type PiiSpanType = {
@@ -37,4 +38,5 @@ export type PiiSpanType = {
   start: number;
   end: number;
   value: string;
+  placeholder: string;
 };
