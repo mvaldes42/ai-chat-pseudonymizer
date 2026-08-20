@@ -18,7 +18,7 @@ import { v4 as uuidv4 } from "uuid";
 import { addMessage } from "../store/messagesSlice";
 import type { RootState } from "../store/store";
 import { SendMessageType } from "../types";
-import { piiDetectAndReplace } from "./piiDetection";
+import { piiDetectAndReplace } from "./piiDetectAndReplace";
 
 export function ChatbotPage() {
   const [streamId] = useState(uuidv4());
@@ -39,8 +39,8 @@ export function ChatbotPage() {
   async function handleSendMessage({ streamId, content }: SendMessageType) {
     const pseudonymizedContent = await piiDetectAndReplace(content);
 
-    sendMessage({ variables: { streamId, content } });
-    dispatch(addMessage({ content, sender: "User" }));
+    sendMessage({ variables: { streamId, content: pseudonymizedContent } });
+    dispatch(addMessage({ content: pseudonymizedContent, sender: "User" }));
   }
 
   return (

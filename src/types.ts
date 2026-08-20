@@ -16,3 +16,20 @@ export type SendMessageType = {
 export type SendMessageMutationType = {
   sendMessage: SendMessageType;
 };
+
+export type NerTokenType = {
+  entity: string;
+  word: string;
+  index: number;
+};
+
+export type PiiGroupType = {
+  type: string;
+  words: string[];
+  indexes: number[];
+};
+
+export type TokenType = {
+  index: number;
+  word: string;
+};
