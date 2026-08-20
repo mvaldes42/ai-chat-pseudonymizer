@@ -128,9 +128,5 @@ export function replaceTokens({
   const result = replaceEntities(content, spans);
   const mapping = createPiiMapping(spans);
 
-  console.log("groups", groups);
-  console.log("spans", spans);
-  console.log("result", result);
-  console.log("mapping", mapping);
   return { result, mapping };
 }

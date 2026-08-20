@@ -1,4 +1,9 @@
-export type SendMessageType = {
+export type MessageType = {
+  streamId: string;
+  content: string;
+};
+
+export type SendMessageResponseType = {
   streamId: string;
   content: string;
   messageId: string;
