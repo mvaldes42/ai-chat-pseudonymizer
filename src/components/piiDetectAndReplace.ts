@@ -2,7 +2,7 @@ import { AutoTokenizer, pipeline } from "@huggingface/transformers";
 import { replaceTokens } from "./replaceTokens";
 
 export async function piiDetectAndReplace(content: string) {
-  content = "my name is Jane Smith and my email is jane.smith@example.com";
+  content = "my name is Jane Smith and my email is jane.smith@example.com. I live in Paris.";
   const model = "onnx-community/bert-small-pii-detection-ONNX";
 
   const loadPipeline = pipeline as (

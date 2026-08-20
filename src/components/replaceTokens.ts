@@ -1,4 +1,9 @@
-import type { NerTokenType, PiiGroupType, TokenType } from "../types";
+import type {
+  NerTokenType,
+  PiiGroupType,
+  PiiSpanType,
+  TokenType,
+} from "../types";
 
 function entityType(entity: string): string | null {
   if (entity === "O") {
@@ -31,6 +36,55 @@ function groupEntities(piiTokens: NerTokenType[]): PiiGroupType[] {
   return groups;
 }
 
+function locateEntities(
+  content: string,
+  groups: PiiGroupType[],
+): PiiSpanType[] {
+  const spans: PiiSpanType[] = [];
+  let cursor = 0;
+
+  for (const group of groups) {
+    const groupFrom = cursor;
+    let start = -1;
+    let end = cursor;
+
+    for (const raw of group.words) {
+      const needle = raw.replace(/^##/, "").toLowerCase();
+      if (!needle) {
+        continue;
+      }
+
+      const at = content.slice(cursor).toLowerCase().indexOf(needle);
+      if (at < 0) {
+        start = -1;
+        break;
+      }
+
+      const tokenStart = cursor + at;
+      const tokenEnd = tokenStart + needle.length;
+      if (start < 0) {
+        start = tokenStart;
+      }
+      end = tokenEnd;
+      cursor = tokenEnd;
+    }
+
+    if (start < 0) {
+      cursor = groupFrom;
+      continue;
+    }
+
+    spans.push({
+      type: group.type,
+      start,
+      end,
+      value: content.slice(start, end),
+    });
+  }
+
+  return spans;
+}
+
 export function replaceTokens({
   content,
   tokens,
@@ -42,6 +96,8 @@ export function replaceTokens({
 }) {
   const result = "";
   const groups = groupEntities(piiTokens);
+  const spans = locateEntities(content, groups);
   console.log("groups", groups);
+  console.log("spans", spans);
   return result;
 }

@@ -17,10 +17,13 @@ export type SendMessageMutationType = {
   sendMessage: SendMessageType;
 };
 
-export type NerTokenType = {
-  entity: string;
-  word: string;
+export type TokenType = {
   index: number;
+  word: string;
+};
+
+export type NerTokenType = TokenType & {
+  entity: string;
 };
 
 export type PiiGroupType = {
@@ -29,7 +32,9 @@ export type PiiGroupType = {
   indexes: number[];
 };
 
-export type TokenType = {
-  index: number;
-  word: string;
+export type PiiSpanType = {
+  type: string;
+  start: number;
+  end: number;
+  value: string;
 };
