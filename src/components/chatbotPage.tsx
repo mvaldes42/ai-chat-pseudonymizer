@@ -59,8 +59,6 @@ export function ChatbotPage() {
     streamId: string;
     content: string;
   }) {
-    content =
-      "my name is Jane Smith and my email is jane.smith@example.com. My friend is Lou. I live in Paris and she lives in London.";
     const userMessageId = uuidv4();
     const { result, mapping } = await piiDetectAndReplace(content);
 
