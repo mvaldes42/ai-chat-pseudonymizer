@@ -8,8 +8,6 @@ This is a POC, not a production privacy system.
 
 The chat UI, GraphQL API, and Redux message store are in place. Sending a message returns a **stub** (`"This is a test response"`). The following are not implemented yet:
 
-- Client-side PII detection (Transformers.js / PII Model)
-- Local pseudonymization and reverse mapping
 - OpenAI API calls
 - GraphQL subscription streaming
 
