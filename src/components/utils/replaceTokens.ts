@@ -3,7 +3,7 @@ import type {
   PiiGroupType,
   PiiMapping,
   PiiSpanType,
-} from "../types";
+} from "../../types";
 
 function entityType(entity: string): string | null {
   if (entity === "O") {

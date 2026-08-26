@@ -18,7 +18,7 @@ import { v4 as uuidv4 } from "uuid";
 import { addMessage, storePiiMapping } from "../store/messagesSlice";
 import type { RootState } from "../store/store";
 import { MessageType } from "../types";
-import { piiDetectAndReplace } from "./piiDetectAndReplace";
+import { piiDetectAndReplace } from "./utils/piiDetectAndReplace";
 
 export function ChatbotPage() {
   const [streamId] = useState(uuidv4());
@@ -41,12 +41,18 @@ export function ChatbotPage() {
   }, [response, dispatch]);
 
   async function handleSendMessage({ streamId, content }: MessageType) {
+    content =
+      "my name is Jane Smith and my email is jane.smith@example.com. My friend is Lou. I live in Paris and she lives in London.";
     const userMessageId = uuidv4();
     const { result, mapping } = await piiDetectAndReplace(content);
 
     dispatch(storePiiMapping({ userMessageId, mapping }));
     dispatch(
-      addMessage({ content: result, sender: "User", messageId: userMessageId }),
+      addMessage({
+        content: content,
+        sender: "User",
+        messageId: userMessageId,
+      }),
     );
     sendMessage({ variables: { streamId, content: result } });
   }
