@@ -6,11 +6,16 @@ const SEND_MESSAGE_MUTATION: TypedDocumentNode<
   SendMessageMutationType,
   MessageType
 > = gql`
-  mutation SendMessage($streamId: ID!, $content: String!) {
-    sendMessage(streamId: $streamId, content: $content) {
+  mutation SendMessage($streamId: ID!, $content: String!, $userMessageId: ID!) {
+    sendMessage(
+      streamId: $streamId
+      content: $content
+      userMessageId: $userMessageId
+    ) {
       streamId
       content
       messageId
+      userMessageId
     }
   }
 `;

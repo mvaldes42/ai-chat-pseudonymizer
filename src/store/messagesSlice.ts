@@ -11,9 +11,13 @@ const messagesSlice = createSlice({
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<Omit<ChatMessageType, "id">>) => {
+      if (action.payload.sender === "OpenAI" && !action.payload.userMessageId) {
+        throw new Error("User message ID is required for OpenAI messages");
+      }
       state.messageList.push({
         id: state.messageList.length + 1,
         messageId: action.payload.messageId,
+        userMessageId: action.payload.userMessageId,
         content: action.payload.content,
         sender: action.payload.sender,
       });

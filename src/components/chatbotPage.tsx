@@ -17,8 +17,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 import { addMessage, storePiiMapping } from "../store/messagesSlice";
 import type { RootState } from "../store/store";
-import { MessageType } from "../types";
 import { piiDetectAndReplace } from "./utils/piiDetectAndReplace";
+import { decodeChatbotMessage } from "./utils/decodeChatbotMessage";
 
 export function ChatbotPage() {
   const [streamId] = useState(uuidv4());
@@ -27,20 +27,38 @@ export function ChatbotPage() {
   const messageList = useSelector(
     (state: RootState) => state.messages.messageList,
   );
+  const piiMappingList = useSelector(
+    (state: RootState) => state.messages.piiMappingList,
+  );
 
   useEffect(() => {
     if (response?.sendMessage?.content) {
+      const { content, userMessageId, messageId } = response.sendMessage;
+
+      const decodedContent = decodeChatbotMessage({
+        content,
+        userMessageId,
+        piiMappingList,
+      });
+
       dispatch(
         addMessage({
-          content: response.sendMessage.content,
+          content: decodedContent,
           sender: "OpenAI",
-          messageId: response.sendMessage.messageId,
+          messageId,
+          userMessageId,
         }),
       );
     }
-  }, [response, dispatch]);
+  }, [response, dispatch, piiMappingList]);
 
-  async function handleSendMessage({ streamId, content }: MessageType) {
+  async function handleSendMessage({
+    streamId,
+    content,
+  }: {
+    streamId: string;
+    content: string;
+  }) {
     content =
       "my name is Jane Smith and my email is jane.smith@example.com. My friend is Lou. I live in Paris and she lives in London.";
     const userMessageId = uuidv4();
@@ -54,7 +72,9 @@ export function ChatbotPage() {
         messageId: userMessageId,
       }),
     );
-    sendMessage({ variables: { streamId, content: result } });
+    sendMessage({
+      variables: { streamId, content: result, userMessageId },
+    });
   }
 
   return (

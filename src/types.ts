@@ -1,8 +1,11 @@
+export type SenderType = "User" | "OpenAI";
+
 export type ChatMessageType = {
   id: number;
   messageId?: string;
   content: string;
-  sender: string;
+  sender: SenderType;
+  userMessageId?: string;
 };
 
 export type MessagesState = {
@@ -14,6 +17,7 @@ export type MessageType = {
   streamId: string;
   content: string;
   messageId?: string;
+  userMessageId: string;
 };
 
 export type SendMessageMutationType = {

@@ -17,11 +17,12 @@ const resolvers = {
   Mutation: {
     sendMessage: (
       _: any,
-      { streamId, content }: MessageType,
+      { streamId, content, userMessageId }: MessageType,
     ): SendMessageResponseType => {
       const messageId = uuidv4();
-      const response = "This is a test response";
-      return { streamId, content: response, messageId };
+      const response =
+        "Hello [PERSON_1] and [PERSON_2]! Would you like weather reports for [LOCATION_1] and [LOCATION_2]? I can send it to you on your email address: [EMAIL_ADDRESS_1].";
+      return { streamId, content: response, messageId, userMessageId };
     },
   },
 };
