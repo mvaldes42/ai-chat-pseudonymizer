@@ -107,12 +107,13 @@ function replaceEntities(content: string, spans: PiiSpanType[]): string {
 }
 
 function createPiiMapping(spans: PiiSpanType[]): PiiMapping {
+  if (spans.length === 0) {
+    return undefined;
+  }
   const mapping: PiiMapping = {};
-
   for (const span of spans) {
     mapping[span.placeholder] = span.value;
   }
-
   return mapping;
 }
 

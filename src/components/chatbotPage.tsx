@@ -19,6 +19,7 @@ import { addMessage, storePiiMapping } from "../store/messagesSlice";
 import type { RootState } from "../store/store";
 import { piiDetectAndReplace } from "./utils/piiDetectAndReplace";
 import { decodeChatbotMessage } from "./utils/decodeChatbotMessage";
+import { MessageType } from "../types";
 
 export function ChatbotPage() {
   const [sendMessage, { data: response }] = useSendMessageMutation();
@@ -29,6 +30,7 @@ export function ChatbotPage() {
   const piiMappingList = useSelector(
     (state: RootState) => state.messages.piiMappingList,
   );
+  const lastMessage = messageList[messageList.length - 1];
 
   useEffect(() => {
     // Decode the response from the assistant
@@ -68,11 +70,25 @@ export function ChatbotPage() {
         messageId,
       }),
     );
-    dispatch(storePiiMapping({ messageId, mapping }));
+
+    if (mapping) {
+      dispatch(storePiiMapping({ messageId, mapping }));
+    }
 
     sendMessage({
       variables: { content: pseudonymizedContent, messageId },
     });
+  }
+
+  function getPiiInfo(message: MessageType) {
+    const piiInfo = piiMappingList.find((mapping: any) => {
+      if (message.sender === "assistant") {
+        return mapping.messageId === message.userMessageId;
+      } else {
+        return mapping.messageId === message.messageId;
+      }
+    });
+    return piiInfo?.mapping || undefined;
   }
 
   return (
@@ -87,13 +103,17 @@ export function ChatbotPage() {
           <Search placeholder="Search..." />
           <ConversationList>
             <Conversation
-              info="Yes i can do it for you"
-              lastSenderName="OpenAI"
-              name="OpenAI"
+              info={lastMessage.content}
+              lastSenderName={lastMessage.sender}
+              name={lastMessage.sender}
             >
               <Avatar
-                name="OpenAI"
-                src="https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
+                name={lastMessage.sender}
+                src={
+                  lastMessage.sender === "assistant"
+                    ? "https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
+                    : "https://chatscope.io/storybook/react/assets/akane-MXhWvx63.svg"
+                }
               />
             </Conversation>
           </ConversationList>
@@ -110,27 +130,46 @@ export function ChatbotPage() {
           </ConversationHeader>
           <MessageList>
             {messageList?.length > 0 &&
-              messageList.map((message) => (
-                <Message
-                  key={message.messageId || message.id}
-                  model={{
-                    direction:
-                      message.sender === "assistant" ? "incoming" : "outgoing",
-                    message: message.content,
-                    position: "single",
-                    sender: message.sender,
-                  }}
-                >
-                  <Avatar
-                    name={message.sender}
-                    src={
-                      message.sender === "assistant"
-                        ? "https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
-                        : "https://chatscope.io/storybook/react/assets/akane-MXhWvx63.svg"
-                    }
-                  />
-                </Message>
-              ))}
+              messageList.map((message) => {
+                const piiInfo = getPiiInfo(message);
+                const piiInfoEntries = piiInfo
+                  ? Object.entries(piiInfo)
+                  : undefined;
+                return (
+                  <Message
+                    key={message.messageId || message.id}
+                    model={{
+                      direction:
+                        message.sender === "assistant"
+                          ? "incoming"
+                          : "outgoing",
+                      message: message.content,
+                      position: "single",
+                      sender: message.sender,
+                    }}
+                  >
+                    <Message.Footer>
+                      {piiInfo &&
+                        piiInfoEntries?.map(([key, value], index) => (
+                          <span key={key}>
+                            {key}: {value}
+                            {index < piiInfoEntries.length - 1 && (
+                              <span>&nbsp;-&nbsp;</span>
+                            )}
+                          </span>
+                        ))}
+                    </Message.Footer>
+                    <Avatar
+                      name={message.sender}
+                      src={
+                        message.sender === "assistant"
+                          ? "https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
+                          : "https://chatscope.io/storybook/react/assets/akane-MXhWvx63.svg"
+                      }
+                    />
+                  </Message>
+                );
+              })}
           </MessageList>
           <MessageInput
             placeholder="Type message here"

@@ -45,7 +45,7 @@ export type PiiSpanType = {
   placeholder: string;
 };
 
-export type PiiMapping = Record<string, string>;
+export type PiiMapping = Record<string, string> | undefined;
 
 export type PiiMappingReduxType = {
   id: number;

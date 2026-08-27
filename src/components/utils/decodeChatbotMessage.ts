@@ -10,8 +10,9 @@ export function decodeChatbotMessage({
   const piiMapping = piiMappingList.find(
     (mapping: any) => mapping.messageId === messageId,
   );
+
   if (!piiMapping) {
-    throw new Error("User message ID not found");
+    return content;
   }
 
   const decodedContent = content.replaceAll(
