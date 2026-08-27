@@ -6,22 +6,12 @@ const SEND_MESSAGE_MUTATION: TypedDocumentNode<
   SendMessageMutationType,
   {
     content: string;
-    messageId: string | null;
     previousResponseId: string | null;
   }
 > = gql`
-  mutation SendMessage(
-    $content: String!
-    $messageId: ID
-    $previousResponseId: String
-  ) {
-    sendMessage(
-      content: $content
-      messageId: $messageId
-      previousResponseId: $previousResponseId
-    ) {
+  mutation SendMessage($content: String!, $previousResponseId: String) {
+    sendMessage(content: $content, previousResponseId: $previousResponseId) {
       content
-      userMessageId
       responseId
     }
   }

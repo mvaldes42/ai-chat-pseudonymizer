@@ -1,24 +1,20 @@
+import { PiiMappingType } from "../../types";
+
 export function decodeChatbotMessage({
   content,
-  userMessageId: messageId,
   piiMappingList,
 }: {
   content: string;
-  userMessageId: string;
-  piiMappingList: any[];
+  piiMappingList: PiiMappingType[];
 }) {
-  const piiMapping = piiMappingList.find(
-    (mapping: any) => mapping.messageId === messageId,
-  );
-
-  if (!piiMapping) {
-    return content;
-  }
-
   const decodedContent = content.replaceAll(
     /\[([^\]]+)\]/g,
     (match: string) => {
-      return piiMapping.mapping[match];
+      return (
+        piiMappingList.find((mapping: PiiMappingType) => {
+          return mapping.placeholder === match;
+        })?.value || match
+      );
     },
   );
   return decodedContent;

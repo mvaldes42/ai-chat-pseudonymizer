@@ -1,23 +1,22 @@
 export type SenderType = "user" | "assistant";
 
 export type MessageType = {
-  id: number;
-  messageId: string;
+  id?: number;
   content: string;
   sender: SenderType;
-  userMessageId?: string | null;
 };
+
+export type PiiOccurrenceCountType = { type: string; count: number };
 
 export type MessagesState = {
   messageList: MessageType[];
-  piiMappingList: PiiMappingReduxType[];
+  piiMappingList: PiiMappingType[];
+  piiOccurrencesCount: PiiOccurrenceCountType[];
 };
 
 export type SendMessageMutationType = {
   sendMessage: {
     content: string;
-    messageId: string;
-    userMessageId?: string | null;
     responseId: string;
   };
 };
@@ -35,7 +34,6 @@ export type PiiGroupType = {
   type: string;
   words: string[];
   indexes: number[];
-  placeholder: string;
 };
 
 export type PiiSpanType = {
@@ -43,13 +41,11 @@ export type PiiSpanType = {
   start: number;
   end: number;
   value: string;
-  placeholder: string;
+  placeholder: string | null;
+  alreadyMapped: boolean;
 };
 
-export type PiiMapping = Record<string, string> | undefined;
-
-export type PiiMappingReduxType = {
-  id: number;
-  messageId: string;
-  mapping: PiiMapping;
+export type PiiMappingType = {
+  placeholder: string;
+  value: string;
 };

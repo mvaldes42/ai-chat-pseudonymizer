@@ -14,16 +14,18 @@ import {
 import { useSendMessageMutation } from "../graphql/useSendMessageMutation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { v4 as uuidv4 } from "uuid";
 import { addMessage, storePiiMapping } from "../store/messagesSlice";
 import type { RootState } from "../store/store";
 import { piiDetectAndReplace } from "./utils/piiDetectAndReplace";
 import { decodeChatbotMessage } from "./utils/decodeChatbotMessage";
-import { MessageType } from "../types";
+import { PiiMappingType } from "../types";
 
 export function ChatbotPage() {
   const [sendMessage, { data: response }] = useSendMessageMutation();
   const dispatch = useDispatch();
+  const piiOccurrencesCount = useSelector(
+    (state: RootState) => state.messages.piiOccurrencesCount,
+  );
   const messageList = useSelector(
     (state: RootState) => state.messages.messageList,
   );
@@ -35,16 +37,11 @@ export function ChatbotPage() {
 
   useEffect(() => {
     // Decode the response from the assistant
-    if (
-      response?.sendMessage?.content &&
-      response?.sendMessage?.userMessageId &&
-      response?.sendMessage?.responseId
-    ) {
-      const { content, userMessageId, messageId } = response.sendMessage;
+    if (response?.sendMessage?.content && response?.sendMessage?.responseId) {
+      const { content } = response.sendMessage;
 
       const decodedContent = decodeChatbotMessage({
         content,
-        userMessageId,
         piiMappingList,
       });
 
@@ -54,49 +51,45 @@ export function ChatbotPage() {
         addMessage({
           content: decodedContent,
           sender: "assistant",
-          messageId,
-          userMessageId,
         }),
       );
     }
   }, [response, dispatch, piiMappingList]);
 
   async function handleSendMessage({ content }: { content: string }) {
-    // Handle a message sent by the user
-    const messageId = uuidv4();
-    const { result: pseudonymizedContent, mapping } =
-      await piiDetectAndReplace(content);
+    // content = "My name is John Smith and I live in Paris";
+    const { result: pseudonymizedContent, mapping } = await piiDetectAndReplace(
+      { content, piiOccurrencesCount, piiMappingList },
+    );
 
     dispatch(
       addMessage({
         content,
         sender: "user",
-        messageId,
       }),
     );
 
-    if (mapping) {
-      dispatch(storePiiMapping({ messageId, mapping }));
+    if (mapping && mapping.length > 0) {
+      dispatch(storePiiMapping(mapping));
     }
 
     sendMessage({
       variables: {
         content: pseudonymizedContent,
-        messageId,
         previousResponseId: lastResponseId,
       },
     });
   }
 
-  function getPiiInfo(message: MessageType) {
-    const piiInfo = piiMappingList.find((mapping: any) => {
-      if (message.sender === "assistant") {
-        return mapping.messageId === message.userMessageId;
-      } else {
-        return mapping.messageId === message.messageId;
+  function getPiiInfo(content: string) {
+    const piiInfo: PiiMappingType[] = [];
+
+    for (const mapping of piiMappingList) {
+      if (content.includes(mapping.value)) {
+        piiInfo.push(mapping);
       }
-    });
-    return piiInfo?.mapping || undefined;
+    }
+    return piiInfo;
   }
 
   return (
@@ -141,13 +134,10 @@ export function ChatbotPage() {
           <MessageList>
             {messageList?.length > 0 &&
               messageList.map((message) => {
-                const piiInfo = getPiiInfo(message);
-                const piiInfoEntries = piiInfo
-                  ? Object.entries(piiInfo)
-                  : undefined;
+                const piiInfo = getPiiInfo(message.content);
                 return (
                   <Message
-                    key={message.messageId || message.id}
+                    key={message.id}
                     model={{
                       direction:
                         message.sender === "assistant"
@@ -160,10 +150,10 @@ export function ChatbotPage() {
                   >
                     <Message.Footer>
                       {piiInfo &&
-                        piiInfoEntries?.map(([key, value], index) => (
-                          <span key={key}>
-                            {key}: {value}
-                            {index < piiInfoEntries.length - 1 && (
+                        piiInfo.map((mapping, index) => (
+                          <span key={mapping.placeholder}>
+                            {mapping.placeholder}: {mapping.value}
+                            {index < piiInfo.length - 1 && (
                               <span>&nbsp;-&nbsp;</span>
                             )}
                           </span>

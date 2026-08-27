@@ -1,7 +1,8 @@
 import type {
   NerTokenType,
   PiiGroupType,
-  PiiMapping,
+  PiiMappingType,
+  PiiOccurrenceCountType,
   PiiSpanType,
 } from "../../types";
 
@@ -12,7 +13,13 @@ function entityType(entity: string): string | null {
   return entity.replace(/^[BI]-/, "");
 }
 
-function groupEntities(piiTokens: NerTokenType[]): PiiGroupType[] {
+function groupEntities({
+  piiTokens,
+  piiOccurrencesCount,
+}: {
+  piiTokens: NerTokenType[];
+  piiOccurrencesCount: PiiOccurrenceCountType[];
+}): PiiGroupType[] {
   const groups: PiiGroupType[] = [];
 
   for (const token of piiTokens) {
@@ -20,9 +27,6 @@ function groupEntities(piiTokens: NerTokenType[]): PiiGroupType[] {
     if (!type) {
       continue;
     }
-    // we need to keep a count of the number of occurrences of each type
-    const count = groups.filter((group) => group.type === type).length + 1;
-    const placeholder = `[${type}_${count}]`; // Number per type (PERSON_1,EMAIL_1, PERSON_2, …).
 
     const last = groups[groups.length - 1];
     const startsGroup =
@@ -33,7 +37,6 @@ function groupEntities(piiTokens: NerTokenType[]): PiiGroupType[] {
         type,
         words: [token.word],
         indexes: [token.index],
-        placeholder,
       });
     } else {
       last.words.push(token.word);
@@ -44,10 +47,51 @@ function groupEntities(piiTokens: NerTokenType[]): PiiGroupType[] {
   return groups;
 }
 
-function locateEntities(
-  content: string,
-  groups: PiiGroupType[],
-): PiiSpanType[] {
+function attributePlaceholder({
+  spans,
+  piiMappingList,
+  piiOccurrencesCount,
+}: {
+  spans: PiiSpanType[];
+  piiMappingList: PiiMappingType[];
+  piiOccurrencesCount: PiiOccurrenceCountType[];
+}): PiiSpanType[] {
+  // copy the piiOccurrencesCount to avoid mutating the original array
+  const currentTypeCount = structuredClone(piiOccurrencesCount) || [];
+
+  for (const span of spans) {
+    const existingMapping = piiMappingList.find((mapping) => {
+      return mapping.value === span.value;
+    });
+    if (existingMapping) {
+      span.placeholder = existingMapping.placeholder;
+      span.alreadyMapped = true;
+    } else {
+      const currentCount = currentTypeCount.find(
+        (pii: any) => pii.type === span.type,
+      );
+
+      if (currentCount) {
+        currentCount.count++;
+        span.placeholder = `[${span.type}_${currentCount.count}]`;
+      } else {
+        currentTypeCount.push({ type: span.type, count: 1 });
+        span.placeholder = `[${span.type}_${1}]`;
+      }
+      span.alreadyMapped = false;
+    }
+  }
+
+  return spans;
+}
+
+function locateEntities({
+  content,
+  groups,
+}: {
+  content: string;
+  groups: PiiGroupType[];
+}): PiiSpanType[] {
   const spans: PiiSpanType[] = [];
   let cursor = 0;
 
@@ -87,14 +131,21 @@ function locateEntities(
       start,
       end,
       value: content.slice(start, end),
-      placeholder: group.placeholder,
+      placeholder: null,
+      alreadyMapped: false,
     });
   }
 
   return spans;
 }
 
-function replaceEntities(content: string, spans: PiiSpanType[]): string {
+function replaceEntities({
+  content,
+  spans,
+}: {
+  content: string;
+  spans: PiiSpanType[];
+}): string {
   let result = "";
   let last = 0;
 
@@ -106,13 +157,22 @@ function replaceEntities(content: string, spans: PiiSpanType[]): string {
   return result + content.slice(last);
 }
 
-function createPiiMapping(spans: PiiSpanType[]): PiiMapping {
+function createPiiMapping({
+  spans,
+}: {
+  spans: PiiSpanType[];
+}): PiiMappingType[] | undefined {
   if (spans.length === 0) {
     return undefined;
   }
-  const mapping: PiiMapping = {};
+  const mapping: PiiMappingType[] = [];
   for (const span of spans) {
-    mapping[span.placeholder] = span.value;
+    if (span.placeholder && !span.alreadyMapped) {
+      mapping.push({
+        placeholder: span.placeholder,
+        value: span.value,
+      });
+    }
   }
   return mapping;
 }
@@ -120,14 +180,27 @@ function createPiiMapping(spans: PiiSpanType[]): PiiMapping {
 export function replaceTokens({
   content,
   piiTokens,
+  piiOccurrencesCount,
+  piiMappingList,
 }: {
   content: string;
   piiTokens: NerTokenType[];
+  piiOccurrencesCount: PiiOccurrenceCountType[];
+  piiMappingList: PiiMappingType[];
 }) {
-  const groups = groupEntities(piiTokens);
-  const spans = locateEntities(content, groups);
-  const result = replaceEntities(content, spans);
-  const mapping = createPiiMapping(spans);
+  const groups = groupEntities({
+    piiTokens,
+    piiOccurrencesCount,
+  });
+  const spans = locateEntities({ content, groups });
+
+  const spansWithPlaceholder = attributePlaceholder({
+    spans,
+    piiMappingList,
+    piiOccurrencesCount,
+  });
+  const result = replaceEntities({ content, spans: spansWithPlaceholder });
+  const mapping = createPiiMapping({ spans: spansWithPlaceholder });
 
   return { result, mapping };
 }

@@ -8,7 +8,6 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
 import { MessageType, SendMessageResponseType, typeDefs } from "./types";
-import { v4 as uuidv4 } from "uuid";
 import OpenAI from "openai";
 
 const resolvers = {
@@ -18,29 +17,26 @@ const resolvers = {
   Mutation: {
     sendMessage: async (
       _: any,
-      { content, messageId: userMessageId, previousResponseId }: MessageType,
+      { content, previousResponseId }: MessageType,
     ): Promise<SendMessageResponseType> => {
       const client = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
       });
-      const messageId = uuidv4();
-
       const response = await client.responses.create({
         model: "gpt-5-nano",
         instructions: `You are a helpful assistant that can answer questions. Private information inside the user's messages are pseudonymized with placeholder such as [PERSON_x], [LOCATION_x], [EMAIL_ADDRESS_x], etc.
         When answering, do not replace the placeholder, act as if the placeholder is the actual information.
-        Do not invent new placeholders for private information, only use the placeholders that are already in the user's message.`,
+        Do not invent new placeholders for private information, only use the placeholders that are already in the user's messages.`,
         max_output_tokens: 1500,
         previous_response_id: previousResponseId,
         input: content,
       });
+      // const response = { output_text: "Hello [PERSON_1]", id: "res_123" };
 
       console.log(response);
 
       return {
         content: response.output_text,
-        messageId,
-        userMessageId,
         responseId: response.id,
       };
     },
