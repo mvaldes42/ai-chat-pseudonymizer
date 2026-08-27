@@ -18,6 +18,7 @@ export type SendMessageMutationType = {
     content: string;
     messageId: string;
     userMessageId?: string | null;
+    responseId: string;
   };
 };
 

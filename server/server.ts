@@ -18,22 +18,22 @@ const resolvers = {
   Mutation: {
     sendMessage: async (
       _: any,
-      { content, messageId: userMessageId }: MessageType,
+      { content, messageId: userMessageId, previousResponseId }: MessageType,
     ): Promise<SendMessageResponseType> => {
       const client = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
       });
       const messageId = uuidv4();
 
-      // const response = await client.responses.create({
-      //   model: "gpt-5-nano",
-      //   instructions: `You are a helpful assistant that can answer questions. Private information inside the user's messages are pseudonymized with placeholder such as [PERSON_x], [LOCATION_x], [EMAIL_ADDRESS_x], etc.
-      //     When answering, do not replace the placeholder, act as if the placeholder is the actual information.
-      //     Do not invent new placeholders for private information, only use the placeholders that are already in the user's message.`,
-      //   max_output_tokens: 1500,
-      //   input: content,
-      // });
-      const response = { output_text: "Hello [PERSON_1]" };
+      const response = await client.responses.create({
+        model: "gpt-5-nano",
+        instructions: `You are a helpful assistant that can answer questions. Private information inside the user's messages are pseudonymized with placeholder such as [PERSON_x], [LOCATION_x], [EMAIL_ADDRESS_x], etc.
+        When answering, do not replace the placeholder, act as if the placeholder is the actual information.
+        Do not invent new placeholders for private information, only use the placeholders that are already in the user's message.`,
+        max_output_tokens: 1500,
+        previous_response_id: previousResponseId,
+        input: content,
+      });
 
       console.log(response);
 
@@ -41,6 +41,7 @@ const resolvers = {
         content: response.output_text,
         messageId,
         userMessageId,
+        responseId: response.id,
       };
     },
   },

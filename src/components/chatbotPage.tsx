@@ -12,7 +12,7 @@ import {
   Avatar,
 } from "@chatscope/chat-ui-kit-react";
 import { useSendMessageMutation } from "../graphql/useSendMessageMutation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 import { addMessage, storePiiMapping } from "../store/messagesSlice";
@@ -31,12 +31,14 @@ export function ChatbotPage() {
     (state: RootState) => state.messages.piiMappingList,
   );
   const lastMessage = messageList[messageList.length - 1];
+  const [lastResponseId, setLastResponseId] = useState<string | null>(null);
 
   useEffect(() => {
     // Decode the response from the assistant
     if (
       response?.sendMessage?.content &&
-      response?.sendMessage?.userMessageId
+      response?.sendMessage?.userMessageId &&
+      response?.sendMessage?.responseId
     ) {
       const { content, userMessageId, messageId } = response.sendMessage;
 
@@ -45,6 +47,8 @@ export function ChatbotPage() {
         userMessageId,
         piiMappingList,
       });
+
+      setLastResponseId(response.sendMessage.responseId);
 
       dispatch(
         addMessage({
@@ -76,7 +80,11 @@ export function ChatbotPage() {
     }
 
     sendMessage({
-      variables: { content: pseudonymizedContent, messageId },
+      variables: {
+        content: pseudonymizedContent,
+        messageId,
+        previousResponseId: lastResponseId,
+      },
     });
   }
 
@@ -102,20 +110,22 @@ export function ChatbotPage() {
         <Sidebar position="left">
           <Search placeholder="Search..." />
           <ConversationList>
-            <Conversation
-              info={lastMessage.content}
-              lastSenderName={lastMessage.sender}
-              name={lastMessage.sender}
-            >
-              <Avatar
+            {lastMessage && (
+              <Conversation
+                info={lastMessage.content}
+                lastSenderName={lastMessage.sender}
                 name={lastMessage.sender}
-                src={
-                  lastMessage.sender === "assistant"
-                    ? "https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
-                    : "https://chatscope.io/storybook/react/assets/akane-MXhWvx63.svg"
-                }
-              />
-            </Conversation>
+              >
+                <Avatar
+                  name={lastMessage.sender}
+                  src={
+                    lastMessage.sender === "assistant"
+                      ? "https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
+                      : "https://chatscope.io/storybook/react/assets/akane-MXhWvx63.svg"
+                  }
+                />
+              </Conversation>
+            )}
           </ConversationList>
         </Sidebar>
         <ChatContainer>

@@ -1,12 +1,14 @@
 export type MessageType = {
   content: string;
   messageId?: string | null;
+  previousResponseId?: string | null;
 };
 
 export type SendMessageResponseType = {
   content: string;
   messageId: string;
   userMessageId?: string | null;
+  responseId: string;
 };
 
 export const typeDefs = `#graphql
@@ -19,11 +21,12 @@ export const typeDefs = `#graphql
     content: String!
     messageId: ID!
     userMessageId: ID
+    responseId: String!
   }
 
   # Client generates streamId, then sends only the already-pseudonymized
   # message. Original PII must never appear in this payload.
   type Mutation {
-    sendMessage(content: String!, messageId: ID): SendMessageResponse!
+    sendMessage(content: String!, messageId: ID, previousResponseId: String): SendMessageResponse!
   }
 `;
