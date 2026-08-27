@@ -1,27 +1,24 @@
-export type SenderType = "User" | "OpenAI";
+export type SenderType = "user" | "assistant";
 
-export type ChatMessageType = {
+export type MessageType = {
   id: number;
-  messageId?: string;
+  messageId: string;
   content: string;
   sender: SenderType;
-  userMessageId?: string;
+  userMessageId?: string | null;
 };
 
 export type MessagesState = {
-  messageList: ChatMessageType[];
-  piiMappingList: PiiMappingEntry[];
-};
-
-export type MessageType = {
-  streamId: string;
-  content: string;
-  messageId?: string;
-  userMessageId: string;
+  messageList: MessageType[];
+  piiMappingList: PiiMappingReduxType[];
 };
 
 export type SendMessageMutationType = {
-  sendMessage: MessageType;
+  sendMessage: {
+    content: string;
+    messageId: string;
+    userMessageId?: string | null;
+  };
 };
 
 export type TokenType = {
@@ -50,8 +47,8 @@ export type PiiSpanType = {
 
 export type PiiMapping = Record<string, string>;
 
-export type PiiMappingEntry = {
+export type PiiMappingReduxType = {
   id: number;
-  userMessageId: string;
+  messageId: string;
   mapping: PiiMapping;
 };

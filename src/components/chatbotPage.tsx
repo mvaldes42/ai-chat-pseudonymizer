@@ -12,7 +12,7 @@ import {
   Avatar,
 } from "@chatscope/chat-ui-kit-react";
 import { useSendMessageMutation } from "../graphql/useSendMessageMutation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 import { addMessage, storePiiMapping } from "../store/messagesSlice";
@@ -21,7 +21,6 @@ import { piiDetectAndReplace } from "./utils/piiDetectAndReplace";
 import { decodeChatbotMessage } from "./utils/decodeChatbotMessage";
 
 export function ChatbotPage() {
-  const [streamId] = useState(uuidv4());
   const [sendMessage, { data: response }] = useSendMessageMutation();
   const dispatch = useDispatch();
   const messageList = useSelector(
@@ -32,7 +31,11 @@ export function ChatbotPage() {
   );
 
   useEffect(() => {
-    if (response?.sendMessage?.content) {
+    // Decode the response from the assistant
+    if (
+      response?.sendMessage?.content &&
+      response?.sendMessage?.userMessageId
+    ) {
       const { content, userMessageId, messageId } = response.sendMessage;
 
       const decodedContent = decodeChatbotMessage({
@@ -44,7 +47,7 @@ export function ChatbotPage() {
       dispatch(
         addMessage({
           content: decodedContent,
-          sender: "OpenAI",
+          sender: "assistant",
           messageId,
           userMessageId,
         }),
@@ -52,26 +55,23 @@ export function ChatbotPage() {
     }
   }, [response, dispatch, piiMappingList]);
 
-  async function handleSendMessage({
-    streamId,
-    content,
-  }: {
-    streamId: string;
-    content: string;
-  }) {
-    const userMessageId = uuidv4();
-    const { result, mapping } = await piiDetectAndReplace(content);
+  async function handleSendMessage({ content }: { content: string }) {
+    // Handle a message sent by the user
+    const messageId = uuidv4();
+    const { result: pseudonymizedContent, mapping } =
+      await piiDetectAndReplace(content);
 
-    dispatch(storePiiMapping({ userMessageId, mapping }));
     dispatch(
       addMessage({
-        content: content,
-        sender: "User",
-        messageId: userMessageId,
+        content,
+        sender: "user",
+        messageId,
       }),
     );
+    dispatch(storePiiMapping({ messageId, mapping }));
+
     sendMessage({
-      variables: { streamId, content: result, userMessageId },
+      variables: { content: pseudonymizedContent, messageId },
     });
   }
 
@@ -115,7 +115,7 @@ export function ChatbotPage() {
                   key={message.messageId || message.id}
                   model={{
                     direction:
-                      message.sender === "OpenAI" ? "incoming" : "outgoing",
+                      message.sender === "assistant" ? "incoming" : "outgoing",
                     message: message.content,
                     position: "single",
                     sender: message.sender,
@@ -124,7 +124,7 @@ export function ChatbotPage() {
                   <Avatar
                     name={message.sender}
                     src={
-                      message.sender === "OpenAI"
+                      message.sender === "assistant"
                         ? "https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
                         : "https://chatscope.io/storybook/react/assets/akane-MXhWvx63.svg"
                     }
@@ -136,7 +136,7 @@ export function ChatbotPage() {
             placeholder="Type message here"
             attachButton={false}
             onSend={async (message) =>
-              await handleSendMessage({ streamId, content: message })
+              await handleSendMessage({ content: message })
             }
           />
         </ChatContainer>
