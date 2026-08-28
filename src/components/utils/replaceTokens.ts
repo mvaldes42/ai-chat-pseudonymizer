@@ -5,6 +5,7 @@ import type {
   PiiOccurrenceCountType,
   PiiSpanType,
 } from "../../types";
+import { parsePlaceholder } from "./parsePlaceholder";
 
 function entityType(entity: string): string | null {
   if (entity === "O") {
@@ -47,6 +48,31 @@ function groupEntities({
   return groups;
 }
 
+function seedTypeCounts({
+  piiMappingList,
+  piiOccurrencesCount,
+}: {
+  piiMappingList: PiiMappingType[];
+  piiOccurrencesCount: PiiOccurrenceCountType[];
+}): PiiOccurrenceCountType[] {
+  const counts = piiOccurrencesCount.map((count) => ({ ...count }));
+
+  for (const mapping of piiMappingList) {
+    const parsed = parsePlaceholder(mapping.placeholder);
+    if (!parsed) {
+      continue;
+    }
+    const existing = counts.find((count) => count.type === parsed.type);
+    if (existing) {
+      existing.count = Math.max(existing.count, parsed.index);
+    } else {
+      counts.push({ type: parsed.type, count: parsed.index });
+    }
+  }
+
+  return counts;
+}
+
 function attributePlaceholder({
   spans,
   piiMappingList,
@@ -56,8 +82,10 @@ function attributePlaceholder({
   piiMappingList: PiiMappingType[];
   piiOccurrencesCount: PiiOccurrenceCountType[];
 }): PiiSpanType[] {
-  // copy the piiOccurrencesCount to avoid mutating the original array
-  const currentTypeCount = structuredClone(piiOccurrencesCount) || [];
+  const currentTypeCount = seedTypeCounts({
+    piiMappingList,
+    piiOccurrencesCount,
+  });
 
   for (const span of spans) {
     const existingMapping = piiMappingList.find((mapping) => {

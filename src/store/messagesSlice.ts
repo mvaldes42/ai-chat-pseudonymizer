@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { parsePlaceholder } from "../components/utils/parsePlaceholder";
 import type { MessageType, MessagesState, PiiMappingType } from "../types";
 
 const initialState: MessagesState = {
@@ -31,16 +32,18 @@ const messagesSlice = createSlice({
       });
     },
     storePiiMapping: (state, action: PayloadAction<PiiMappingType[]>) => {
-      // update the piiOccurrencesCount for all the types in the action.payload
       action.payload.forEach((mapping) => {
-        const cleanType = mapping.placeholder.replace(/[[\]_\d]/g, "");
+        const parsed = parsePlaceholder(mapping.placeholder);
+        if (!parsed) {
+          return;
+        }
         const index = state.piiOccurrencesCount.findIndex(
-          (count) => count.type === cleanType,
+          (count) => count.type === parsed.type,
         );
         if (index !== -1) {
           state.piiOccurrencesCount[index].count++;
         } else {
-          state.piiOccurrencesCount.push({ type: cleanType, count: 1 });
+          state.piiOccurrencesCount.push({ type: parsed.type, count: 1 });
         }
       });
 
