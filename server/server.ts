@@ -8,6 +8,7 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
 import { MessageType, SendMessageResponseType, typeDefs } from "./types";
+import { iterateChunks } from "./messageStream";
 import OpenAI from "openai";
 
 const resolvers = {
@@ -39,6 +40,18 @@ const resolvers = {
         content: response.output_text,
         responseId: response.id,
       };
+    },
+  },
+  Subscription: {
+    messageStream: {
+      subscribe: async function* (
+        _parent: unknown,
+        { streamId }: { streamId: string },
+      ) {
+        for await (const chunk of iterateChunks(streamId)) {
+          yield { messageStream: chunk };
+        }
+      },
     },
   },
 };

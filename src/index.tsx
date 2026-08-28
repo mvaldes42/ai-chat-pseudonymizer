@@ -3,13 +3,29 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloClient, ApolloLink, HttpLink, InMemoryCache } from "@apollo/client";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { ApolloProvider } from "@apollo/client/react";
+import { OperationTypeNode } from "graphql";
+import { createClient } from "graphql-ws";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 
 const cache = new InMemoryCache();
-const link = new HttpLink({ uri: "http://localhost:4000/graphql" });
+const httpLink = new HttpLink({ uri: "http://localhost:4000/graphql" });
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: "ws://localhost:4000/subscriptions",
+    lazy: true,
+    retryAttempts: Infinity,
+    shouldRetry: () => true,
+  }),
+);
+const link = ApolloLink.split(
+  ({ operationType }) => operationType === OperationTypeNode.SUBSCRIPTION,
+  wsLink,
+  httpLink,
+);
 const client = new ApolloClient({
   // Provide required constructor fields
   cache: cache,

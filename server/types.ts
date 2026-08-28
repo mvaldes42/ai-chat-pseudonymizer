@@ -8,6 +8,13 @@ export type SendMessageResponseType = {
   responseId: string;
 };
 
+export type MessageChunkType = {
+  delta?: string | null;
+  done: boolean;
+  responseId?: string | null;
+  error?: string | null;
+};
+
 export const typeDefs = `#graphql
   # GraphQL requires a Query type. health is a simple liveness check.
   type Query {
@@ -19,9 +26,20 @@ export const typeDefs = `#graphql
     responseId: String!
   }
 
+  type MessageChunk {
+    delta: String
+    done: Boolean!
+    responseId: String
+    error: String
+  }
+
   # Client generates streamId, then sends only the already-pseudonymized
   # message. Original PII must never appear in this payload.
   type Mutation {
     sendMessage(content: String!, previousResponseId: String): SendMessageResponse!
+  }
+
+  type Subscription {
+    messageStream(streamId: String!): MessageChunk!
   }
 `;
