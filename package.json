@@ -38,7 +38,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "server": "tsx --env-file=.env server/server.ts",
+    "server": "tsx watch --env-file=.env server/server.ts",
     "dev": "npm run server & npm start",
     "build": "react-scripts build",
     "test": "react-scripts test",

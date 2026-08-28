@@ -6,21 +6,19 @@ This is a POC, not a production privacy system.
 
 ## Current status
 
-The chat UI, GraphQL API, Redux store, client-side PII detection, and OpenAI replies are in place.
+The chat UI, GraphQL API, Redux store, client-side PII detection, and **streaming** OpenAI replies are in place.
 
 1. Detect PII in the browser with [`onnx-community/bert-small-pii-detection-ONNX`](https://huggingface.co/onnx-community/bert-small-pii-detection-ONNX) via Transformers.js.
 2. Replace entities with placeholders such as `[PERSON_1]` and `[EMAIL_ADDRESS_1]`.
 3. Keep the mapping in Redux; send only pseudonymized text to the backend.
-4. Call OpenAI (`gpt-5-nano`) with `previous_response_id` so the conversation stays in context.
-5. Restore original values in the browser before displaying the reply.
-
-**Next step:** GraphQL subscription streaming. A WebSocket endpoint is already mounted at `/subscriptions`; the client still uses an HTTP mutation. Each stream should be keyed by `streamId`. Conversation context stays on OpenAI via `previous_response_id`.
+4. Subscribe over WebSocket. The server streams OpenAI (`gpt-5-nano`) tokens. Conversation context stays on OpenAI via `previous_response_id`.
+5. Decode placeholders on the **accumulated** reply (so a token split like `[PER` + `SON_1]` still restores), and grow the assistant bubble in the UI.
 
 The first message can be slow while the browser downloads the ONNX model.
 
 ## Stack
 
-**Frontend:** React, TypeScript, Create React App, Redux Toolkit, Apollo Client, ChatScope, Transformers.js, graphql-ws (next)
+**Frontend:** React, TypeScript, Create React App, Redux Toolkit, Apollo Client, ChatScope, Transformers.js, graphql-ws
 
 **Backend:** Node.js 22, TypeScript, Express, Apollo Server, GraphQL, OpenAI SDK, graphql-ws
 
@@ -40,17 +38,16 @@ Set `OPENAI_API_KEY` in `.env`. The server uses it to call OpenAI.
 
 - App: [http://localhost:3000](http://localhost:3000)
 - GraphQL: [http://localhost:4000/graphql](http://localhost:4000/graphql)
+- Subscriptions: `ws://localhost:4000/subscriptions`
 
 ### Scripts
 
-| Command          | Description                                 |
-| ---------------- | ------------------------------------------- |
-| `npm run dev`    | Start GraphQL server and React app together |
-| `npm run server` | Start Apollo Server on port 4000            |
-| `npm start`      | Start the React app on port 3000            |
-| `npm run build`  | Production build of the frontend            |
-
-Restart `npm run server` (or `npm run dev`) after backend changes; `tsx` does not watch files.
+| Command          | Description                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| `npm run dev`    | Start GraphQL server and React app together                                 |
+| `npm run server` | Start Apollo Server on port 4000 (`tsx watch` restarts when `server/` changes) |
+| `npm start`      | Start the React app on port 3000 (CRA already hot-reloads `src/`)           |
+| `npm run build`  | Production build of the frontend                                            |
 
 ## Future ideas (not in scope)
 
@@ -62,7 +59,7 @@ These will not be implemented here. They are useful constraints if this were mor
 
 **Browser NER distributes compute, which is good; UX and quality do not come for free.** The ONNX file is downloaded per user, the pipeline is created on the send path, and a small BERT will miss names, non-English text, and messy messages. Worth considering: load the model once (Web Worker / SharedWorker), WebGPU, a second pass for emails/phones with regex, and a fallback that refuses to send when confidence is low. Moving detection to the server would be easier to operate and would destroy the main claim of this POC.
 
-**`previous_response_id` couples the app to OpenAI’s stored session.** The GraphQL API is stateless and would scale horizontally; conversation memory lives at OpenAI and can expire or fail. A real product would keep a local (already pseudonymized) transcript and send a bounded window of messages itself. (Streaming itself is the next POC step, not a future-only idea.)
+**`previous_response_id` couples the app to OpenAI’s stored session.** The GraphQL API is stateless and would scale horizontally; conversation memory lives at OpenAI and can expire or fail. A real product would keep a local (already pseudonymized) transcript and send a bounded window of messages itself.
 
 **Placeholders fight the model.** Long chats, invented tokens, and a naive `\[...\]` replace will smash markdown, citations, and code. A reserved token alphabet, round-trip tests, and treating an unknown placeholder in the reply as an error would be more robust.
 
