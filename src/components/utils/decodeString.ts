@@ -1,6 +1,6 @@
 import { PiiMappingType } from "../../types";
 
-export function decodeChatbotMessage({
+export function decodeString({
   content,
   piiMappingList,
 }: {

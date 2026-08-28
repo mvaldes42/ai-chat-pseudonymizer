@@ -11,18 +11,17 @@ import {
   ConversationHeader,
   Avatar,
 } from "@chatscope/chat-ui-kit-react";
-import { useSendMessageMutation } from "../graphql/useSendMessageMutation";
-import { useEffect, useState } from "react";
+import { useAssistantStream } from "./hooks/useAssistantStream";
 import { useDispatch, useSelector } from "react-redux";
 import { addMessage, storePiiMapping } from "../store/messagesSlice";
 import type { RootState } from "../store/store";
 import { piiDetectAndReplace } from "./utils/piiDetectAndReplace";
-import { decodeChatbotMessage } from "./utils/decodeChatbotMessage";
 import { PiiMappingType } from "../types";
 
 export function ChatbotPage() {
-  const [sendMessage, { data: response }] = useSendMessageMutation();
   const dispatch = useDispatch();
+  const { isStreaming, lastResponseId, requestAssistantReply } =
+    useAssistantStream();
   const piiOccurrencesCount = useSelector(
     (state: RootState) => state.messages.piiOccurrencesCount,
   );
@@ -33,31 +32,8 @@ export function ChatbotPage() {
     (state: RootState) => state.messages.piiMappingList,
   );
   const lastMessage = messageList[messageList.length - 1];
-  const [lastResponseId, setLastResponseId] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Decode the response from the assistant
-    if (response?.sendMessage?.content && response?.sendMessage?.responseId) {
-      const { content } = response.sendMessage;
-
-      const decodedContent = decodeChatbotMessage({
-        content,
-        piiMappingList,
-      });
-
-      setLastResponseId(response.sendMessage.responseId);
-
-      dispatch(
-        addMessage({
-          content: decodedContent,
-          sender: "assistant",
-        }),
-      );
-    }
-  }, [response, dispatch, piiMappingList]);
 
   async function handleSendMessage({ content }: { content: string }) {
-    // content = "My name is John Smith and I live in Paris";
     const { result: pseudonymizedContent, mapping } = await piiDetectAndReplace(
       { content, piiOccurrencesCount, piiMappingList },
     );
@@ -69,15 +45,19 @@ export function ChatbotPage() {
       }),
     );
 
+    const mappingForDecode =
+      mapping && mapping.length > 0
+        ? [...piiMappingList, ...mapping]
+        : piiMappingList;
+
     if (mapping && mapping.length > 0) {
       dispatch(storePiiMapping(mapping));
     }
 
-    sendMessage({
-      variables: {
-        content: pseudonymizedContent,
-        previousResponseId: lastResponseId,
-      },
+    requestAssistantReply({
+      content: pseudonymizedContent,
+      previousResponseId: lastResponseId,
+      piiMappingList: mappingForDecode,
     });
   }
 
@@ -174,6 +154,7 @@ export function ChatbotPage() {
           <MessageInput
             placeholder="Type message here"
             attachButton={false}
+            disabled={isStreaming}
             onSend={async (message) =>
               await handleSendMessage({ content: message })
             }

@@ -14,11 +14,15 @@ export type MessagesState = {
   piiOccurrencesCount: PiiOccurrenceCountType[];
 };
 
-export type SendMessageMutationType = {
-  sendMessage: {
-    content: string;
-    responseId: string;
-  };
+export type MessageChunkType = {
+  delta?: string | null;
+  done: boolean;
+  responseId?: string | null;
+  error?: string | null;
+};
+
+export type MessageStreamSubscriptionType = {
+  messageStream: MessageChunkType;
 };
 
 export type TokenType = {

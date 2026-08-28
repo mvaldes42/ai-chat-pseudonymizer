@@ -1,11 +1,6 @@
-export type MessageType = {
+export type MessageStreamArgs = {
   content: string;
   previousResponseId?: string | null;
-};
-
-export type SendMessageResponseType = {
-  content: string;
-  responseId: string;
 };
 
 export type MessageChunkType = {
@@ -21,11 +16,6 @@ export const typeDefs = `#graphql
     health: Boolean!
   }
 
-  type SendMessageResponse {
-    content: String!
-    responseId: String!
-  }
-
   type MessageChunk {
     delta: String
     done: Boolean!
@@ -33,13 +23,9 @@ export const typeDefs = `#graphql
     error: String
   }
 
-  # Client generates streamId, then sends only the already-pseudonymized
-  # message. Original PII must never appear in this payload.
-  type Mutation {
-    sendMessage(content: String!, previousResponseId: String): SendMessageResponse!
-  }
-
+  # Client sends only the already-pseudonymized message.
+  # Original PII must never appear in this payload.
   type Subscription {
-    messageStream(streamId: String!): MessageChunk!
+    messageStream(content: String!, previousResponseId: String): MessageChunk!
   }
 `;
