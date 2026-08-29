@@ -27,6 +27,16 @@ export async function streamAssistantMessage({
 }): Promise<string | null> {
   let accumulated = ''
 
+  const publishError = (message: string) => {
+    if (!accumulated) {
+      onDecoded(message)
+      return
+    }
+    onDecoded(
+      `${decodeString({ content: accumulated, piiMappingList })}\n\n${message}`,
+    )
+  }
+
   return subscribeMessageStream({
     client,
     content,
@@ -34,27 +44,21 @@ export async function streamAssistantMessage({
     signal,
     onChunk: (chunk) => {
       if (chunk.delta) {
-        const nextAccumulated = accumulated + chunk.delta
-        const result = {
-          accumulated: nextAccumulated,
-          decoded: decodeString({
-            content: nextAccumulated,
+        accumulated += chunk.delta
+        onDecoded(
+          decodeString({
+            content: accumulated,
             piiMappingList,
           }),
-        }
-
-        accumulated = result.accumulated
-        onDecoded(result.decoded)
+        )
       }
 
-      if (chunk.done && chunk.error && !accumulated) {
-        onDecoded(chunk.error)
+      if (chunk.done && chunk.error) {
+        publishError(chunk.error)
       }
     },
     onError: (error) => {
-      if (!accumulated) {
-        onDecoded(errorMessage(error))
-      }
+      publishError(errorMessage(error))
     },
   })
 }
