@@ -4,10 +4,6 @@ import {
   MessageList,
   Message,
   MessageInput,
-  Sidebar,
-  Search,
-  ConversationList,
-  Conversation,
   ConversationHeader,
   Avatar,
 } from "@chatscope/chat-ui-kit-react";
@@ -80,35 +76,11 @@ export function ChatbotPage() {
           height: "600px",
         }}
       >
-        <Sidebar position="left">
-          <Search placeholder="Search..." />
-          <ConversationList>
-            {lastMessage && (
-              <Conversation
-                info={lastMessage.content}
-                lastSenderName={lastMessage.sender}
-                name={lastMessage.sender}
-              >
-                <Avatar
-                  name={lastMessage.sender}
-                  src={
-                    lastMessage.sender === "assistant"
-                      ? "https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
-                      : "https://chatscope.io/storybook/react/assets/akane-MXhWvx63.svg"
-                  }
-                />
-              </Conversation>
-            )}
-          </ConversationList>
-        </Sidebar>
         <ChatContainer>
           <ConversationHeader>
             <ConversationHeader.Back />
-            <Avatar
-              name="OpenAI"
-              src="https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
-            />
-            <ConversationHeader.Content userName="OpenAI" />
+            <Avatar name="assistant" src={getAvatar("assistant")} />
+            <ConversationHeader.Content userName="assistant" />
             <ConversationHeader.Actions></ConversationHeader.Actions>
           </ConversationHeader>
           <MessageList>
@@ -141,11 +113,7 @@ export function ChatbotPage() {
                     </Message.Footer>
                     <Avatar
                       name={message.sender}
-                      src={
-                        message.sender === "assistant"
-                          ? "https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
-                          : "https://chatscope.io/storybook/react/assets/akane-MXhWvx63.svg"
-                      }
+                      src={getAvatar(message.sender)}
                     />
                   </Message>
                 );
@@ -163,4 +131,10 @@ export function ChatbotPage() {
       </MainContainer>
     </div>
   );
+}
+
+function getAvatar(sender: string) {
+  return sender === "assistant"
+    ? "https://chatscope.io/storybook/react/assets/zoe-E7ZdmXF0.svg"
+    : "https://chatscope.io/storybook/react/assets/akane-MXhWvx63.svg";
 }

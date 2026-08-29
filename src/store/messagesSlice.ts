@@ -19,7 +19,7 @@ const messagesSlice = createSlice({
         sender: action.payload.sender,
       });
     },
-    setStreamingAssistantContent: (state, action: PayloadAction<string>) => {
+    addAssistantMessage: (state, action: PayloadAction<string>) => {
       const lastMessage = state.messageList[state.messageList.length - 1];
       if (lastMessage?.sender === "assistant") {
         lastMessage.content = action.payload;
@@ -47,12 +47,11 @@ const messagesSlice = createSlice({
         }
       });
 
-      // add the action.payload to the piiMappingList
       state.piiMappingList.push(...action.payload);
     },
   },
 });
 
-export const { addMessage, setStreamingAssistantContent, storePiiMapping } =
+export const { addMessage, addAssistantMessage, storePiiMapping } =
   messagesSlice.actions;
 export default messagesSlice.reducer;

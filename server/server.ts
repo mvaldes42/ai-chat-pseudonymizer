@@ -33,7 +33,7 @@ const resolvers = {
           const stream = await openai.responses.create({
             model: "gpt-5-nano",
             instructions: INSTRUCTIONS,
-            previous_response_id: previousResponseId ?? undefined,
+            previous_response_id: previousResponseId,
             input: content,
             stream: true,
           });

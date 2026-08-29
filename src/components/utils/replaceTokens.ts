@@ -16,10 +16,8 @@ function entityType(entity: string): string | null {
 
 function groupEntities({
   piiTokens,
-  piiOccurrencesCount,
 }: {
   piiTokens: NerTokenType[];
-  piiOccurrencesCount: PiiOccurrenceCountType[];
 }): PiiGroupType[] {
   const groups: PiiGroupType[] = [];
 
@@ -218,7 +216,6 @@ export function replaceTokens({
 }) {
   const groups = groupEntities({
     piiTokens,
-    piiOccurrencesCount,
   });
   const spans = locateEntities({ content, groups });
 

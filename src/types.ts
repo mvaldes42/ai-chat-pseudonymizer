@@ -14,6 +14,12 @@ export type MessagesState = {
   piiOccurrencesCount: PiiOccurrenceCountType[];
 };
 
+export type AssistantStreamRequestType = {
+  content: string;
+  previousResponseId: string | null;
+  piiMappingList: PiiMappingType[];
+};
+
 export type MessageChunkType = {
   delta?: string | null;
   done: boolean;

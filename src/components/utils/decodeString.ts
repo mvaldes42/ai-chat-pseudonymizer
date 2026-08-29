@@ -1,4 +1,5 @@
 import { PiiMappingType } from "../../types";
+import { placeholderInText } from "./parsePlaceholder";
 
 export function decodeString({
   content,
@@ -8,7 +9,7 @@ export function decodeString({
   piiMappingList: PiiMappingType[];
 }) {
   const decodedContent = content.replaceAll(
-    /\[([^\]]+)\]/g,
+    placeholderInText(),
     (match: string) => {
       return (
         piiMappingList.find((mapping: PiiMappingType) => {
