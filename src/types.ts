@@ -2,7 +2,8 @@ export type SenderType = 'user' | 'assistant'
 
 export type MessageType = {
   id?: number
-  content: string
+  decodedContent: string
+  codedContent?: string
   sender: SenderType
 }
 

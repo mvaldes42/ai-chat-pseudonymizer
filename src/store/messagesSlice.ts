@@ -15,19 +15,28 @@ const messagesSlice = createSlice({
     addMessage: (state, action: PayloadAction<MessageType>) => {
       state.messageList.push({
         id: state.messageList.length + 1,
-        content: action.payload.content,
+        decodedContent: action.payload.decodedContent,
+        codedContent: action.payload.codedContent,
         sender: action.payload.sender,
       })
     },
-    addAssistantMessage: (state, action: PayloadAction<string>) => {
+    addAssistantMessage: (
+      state,
+      action: PayloadAction<{
+        decodedContent: string
+        codedContent: string
+      }>,
+    ) => {
       const lastMessage = state.messageList[state.messageList.length - 1]
       if (lastMessage?.sender === 'assistant') {
-        lastMessage.content = action.payload
+        lastMessage.decodedContent = action.payload.decodedContent
+        lastMessage.codedContent = action.payload.codedContent
         return
       }
       state.messageList.push({
         id: state.messageList.length + 1,
-        content: action.payload,
+        decodedContent: action.payload.decodedContent,
+        codedContent: action.payload.codedContent,
         sender: 'assistant',
       })
     },

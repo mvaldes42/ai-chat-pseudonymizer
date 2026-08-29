@@ -15,26 +15,30 @@ export async function streamAssistantMessage({
   content,
   previousResponseId,
   piiMappingList,
-  onDecoded,
+  onContent,
   signal,
 }: {
   client: ApolloClient
   content: string
   previousResponseId: string | null
   piiMappingList: PiiMappingType[]
-  onDecoded: (decoded: string) => void
+  onContent: (next: { decodedContent: string; codedContent: string }) => void
   signal?: AbortSignal
 }): Promise<string | null> {
   let accumulated = ''
 
+  const publish = (codedContent: string) => {
+    onContent({
+      decodedContent: decodeString({
+        input: codedContent,
+        piiMappingList,
+      }),
+      codedContent,
+    })
+  }
+
   const publishError = (message: string) => {
-    if (!accumulated) {
-      onDecoded(message)
-      return
-    }
-    onDecoded(
-      `${decodeString({ content: accumulated, piiMappingList })}\n\n${message}`,
-    )
+    publish(accumulated ? `${accumulated}\n\n${message}` : message)
   }
 
   return subscribeMessageStream({
@@ -45,12 +49,7 @@ export async function streamAssistantMessage({
     onChunk: (chunk) => {
       if (chunk.delta) {
         accumulated += chunk.delta
-        onDecoded(
-          decodeString({
-            content: accumulated,
-            piiMappingList,
-          }),
-        )
+        publish(accumulated)
       }
 
       if (chunk.done && chunk.error) {

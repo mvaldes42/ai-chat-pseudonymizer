@@ -30,8 +30,8 @@ export function useAssistantStream() {
       previousResponseId,
       piiMappingList,
       signal: controller.signal,
-      onDecoded: (decoded) => {
-        dispatch(addAssistantMessage(decoded))
+      onContent: (next) => {
+        dispatch(addAssistantMessage(next))
       },
     }).then((responseId) => {
       if (controller.signal.aborted) {

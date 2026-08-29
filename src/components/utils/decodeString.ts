@@ -2,10 +2,10 @@ import { PiiMappingType } from '../../types'
 import { placeholderInText } from './parsePlaceholder'
 
 export function decodeString({
-  content,
+  input: content,
   piiMappingList,
 }: {
-  content: string
+  input: string
   piiMappingList: PiiMappingType[]
 }) {
   const decodedContent = content.replaceAll(

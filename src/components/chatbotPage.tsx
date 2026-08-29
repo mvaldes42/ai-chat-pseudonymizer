@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addMessage, storePiiMapping } from '../store/messagesSlice'
 import type { RootState } from '../store/store'
 import { piiDetectAndReplace } from './utils/piiDetectAndReplace'
-import { PiiMappingType } from '../types'
+import { placeholderInText } from './utils/parsePlaceholder'
 
 export function ChatbotPage() {
   const dispatch = useDispatch()
@@ -27,16 +27,18 @@ export function ChatbotPage() {
   const piiMappingList = useSelector(
     (state: RootState) => state.messages.piiMappingList,
   )
-  const lastMessage = messageList[messageList.length - 1]
 
-  async function handleSendMessage({ content }: { content: string }) {
-    const { result: pseudonymizedContent, mapping } = await piiDetectAndReplace(
-      { content, piiOccurrencesCount, piiMappingList },
-    )
+  async function handleSendMessage({ input }: { input: string }) {
+    const { result: codedContent, mapping } = await piiDetectAndReplace({
+      content: input,
+      piiOccurrencesCount,
+      piiMappingList,
+    })
 
     dispatch(
       addMessage({
-        content,
+        decodedContent: input,
+        codedContent,
         sender: 'user',
       }),
     )
@@ -51,21 +53,20 @@ export function ChatbotPage() {
     }
 
     requestAssistantReply({
-      content: pseudonymizedContent,
+      content: codedContent,
       previousResponseId: lastResponseId,
       piiMappingList: mappingForDecode,
     })
   }
 
   function getPiiInfo(content: string) {
-    const piiInfo: PiiMappingType[] = []
-
-    for (const mapping of piiMappingList) {
-      if (content.includes(mapping.value)) {
-        piiInfo.push(mapping)
-      }
+    const placeholders = new Set<string>()
+    for (const match of content.matchAll(placeholderInText())) {
+      placeholders.add(match[0])
     }
-    return piiInfo
+    return piiMappingList.filter((mapping) =>
+      placeholders.has(mapping.placeholder),
+    )
   }
 
   return (
@@ -86,7 +87,10 @@ export function ChatbotPage() {
           <MessageList>
             {messageList?.length > 0 &&
               messageList.map((message) => {
-                const piiInfo = getPiiInfo(message.content)
+                const piiInfo = getPiiInfo(message.codedContent ?? '')
+                const showCoded =
+                  Boolean(message.codedContent) &&
+                  message.codedContent !== message.decodedContent
                 return (
                   <Message
                     key={message.id}
@@ -95,22 +99,37 @@ export function ChatbotPage() {
                         message.sender === 'assistant'
                           ? 'incoming'
                           : 'outgoing',
-                      message: message.content,
+                      message: message.decodedContent,
                       position: 'single',
                       sender: message.sender,
                     }}
                   >
-                    <Message.Footer>
-                      {piiInfo &&
-                        piiInfo.map((mapping, index) => (
-                          <span key={mapping.placeholder}>
-                            {mapping.placeholder}: {mapping.value}
-                            {index < piiInfo.length - 1 && (
-                              <span>&nbsp;-&nbsp;</span>
-                            )}
-                          </span>
-                        ))}
-                    </Message.Footer>
+                    {(piiInfo.length > 0 || showCoded) && (
+                      <Message.Footer>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 4,
+                            textAlign: 'left',
+                          }}
+                        >
+                          {piiInfo.length > 0 && (
+                            <div>
+                              {piiInfo.map((mapping, index) => (
+                                <span key={mapping.placeholder}>
+                                  {mapping.placeholder}: {mapping.value}
+                                  {index < piiInfo.length - 1 && (
+                                    <span>&nbsp;-&nbsp;</span>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {showCoded && <div>{message.codedContent}</div>}
+                        </div>
+                      </Message.Footer>
+                    )}
                     <Avatar
                       name={message.sender}
                       src={getAvatar(message.sender)}
@@ -124,7 +143,7 @@ export function ChatbotPage() {
             attachButton={false}
             disabled={isStreaming}
             onSend={async (message) =>
-              await handleSendMessage({ content: message })
+              await handleSendMessage({ input: message })
             }
           />
         </ChatContainer>

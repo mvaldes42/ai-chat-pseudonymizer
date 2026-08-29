@@ -12,7 +12,7 @@ The chat UI, GraphQL API, Redux store, client-side PII detection, and **streamin
 2. Replace entities with placeholders such as `[PERSON_1]` and `[EMAIL_ADDRESS_1]`.
 3. Keep the mapping in Redux; send only pseudonymized text to the backend.
 4. Subscribe over WebSocket. The server streams OpenAI (`gpt-5-nano`) tokens. Conversation context stays on OpenAI via `previous_response_id`.
-5. Decode placeholders on the **accumulated** reply (so a token split like `[PER` + `SON_1]` still restores), and grow the assistant bubble in the UI.
+5. Show **decoded** text in the bubbles (the working-chat experience). The footer lists `placeholder → original`, then the coded payload that was sent or received.
 
 The first message can be slow while the browser downloads the ONNX model.
 
