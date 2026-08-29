@@ -1,14 +1,14 @@
 export type MessageStreamArgs = {
-  content: string;
-  previousResponseId?: string | null;
-};
+  content: string
+  previousResponseId?: string | null
+}
 
 export type MessageChunkType = {
-  delta?: string | null;
-  done: boolean;
-  responseId?: string | null;
-  error?: string | null;
-};
+  delta?: string | null
+  done: boolean
+  responseId?: string | null
+  error?: string | null
+}
 
 export const typeDefs = `#graphql
   # GraphQL requires a Query type. health is a simple liveness check.
@@ -28,4 +28,4 @@ export const typeDefs = `#graphql
   type Subscription {
     messageStream(content: String!, previousResponseId: String): MessageChunk!
   }
-`;
+`

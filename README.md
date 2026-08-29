@@ -42,12 +42,12 @@ Set `OPENAI_API_KEY` in `.env`. The server uses it to call OpenAI.
 
 ### Scripts
 
-| Command          | Description                                                                 |
-| ---------------- | --------------------------------------------------------------------------- |
-| `npm run dev`    | Start GraphQL server and React app together                                 |
+| Command          | Description                                                                    |
+| ---------------- | ------------------------------------------------------------------------------ |
+| `npm run dev`    | Start GraphQL server and React app together                                    |
 | `npm run server` | Start Apollo Server on port 4000 (`tsx watch` restarts when `server/` changes) |
-| `npm start`      | Start the React app on port 3000 (CRA already hot-reloads `src/`)           |
-| `npm run build`  | Production build of the frontend                                            |
+| `npm start`      | Start the React app on port 3000 (CRA already hot-reloads `src/`)              |
+| `npm run build`  | Production build of the frontend                                               |
 
 ## Future ideas (not in scope)
 
