@@ -49,6 +49,27 @@ Set `OPENAI_API_KEY` in `.env`. The server uses it to call OpenAI.
 | `npm start`      | Start the React app on port 3000 (CRA already hot-reloads `src/`)              |
 | `npm run build`  | Production build of the frontend                                               |
 
+
+## How to use
+
+The PII model labels are:
+
+```
+AGE, COORDINATE, CREDIT_CARD, DATE_TIME, EMAIL_ADDRESS, FINANCIAL, IBAN_CODE, IMEI, IP_ADDRESS, LOCATION, MAC_ADDRESS, NRP, ORGANIZATION, PASSWORD, PERSON, PHONE_NUMBER, TITLE, URL, US_BANK_NUMBER, US_DRIVER_LICENSE, US_ITIN, US_LICENSE_PLATE, US_PASSPORT, US_SSN
+```
+
+Per-label scores: [model evaluation](https://huggingface.co/onnx-community/bert-small-pii-detection-ONNX#evaluation). A small BERT will miss some spans. This is synthetic test data only.
+
+**Sample message** (paste into the chat):
+
+```
+CRM note: got a call from Jane Doe, 42 years old, she is a software engineer at Acme Corporation in San Francisco. Born on 2018-05-12. Email is jane.doe@example.com, and phone number 510-763-3326. Password is Rooph3Thoof.
+```
+
+![Chat bubbles showing decoded text, placeholder-to-original mapping, and the coded payload sent to the API](assistant_example.png)
+
+
+
 ## What can be improved
 
 **Placeholders can interfere with the assistant.** Sometimes the personal detail is the task. “What is the weather in Paris?” fails if `Paris` becomes `[LOCATION_1]`. A real product would let the user opt in or out, or choose per type (code emails, leave city names).
