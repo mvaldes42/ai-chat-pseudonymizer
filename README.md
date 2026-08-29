@@ -49,18 +49,14 @@ Set `OPENAI_API_KEY` in `.env`. The server uses it to call OpenAI.
 | `npm start`      | Start the React app on port 3000 (CRA already hot-reloads `src/`)              |
 | `npm run build`  | Production build of the frontend                                               |
 
-## Future ideas (not in scope)
+## What can be improved
 
-These will not be implemented here. They are useful constraints if this were more than a POC.
+**Placeholders can interfere with the assistant.** Sometimes the personal detail is the task. “What is the weather in Paris?” fails if `Paris` becomes `[LOCATION_1]`. A real product would let the user opt in or out, or choose per type (code emails, leave city names).
 
-**Placeholders hide strings, not meaning.** “I am `[PERSON_1]`, I live in `[LOCATION_1]`, I work at the hospital on that street” can still identify someone. Coreference (“he”, “my boss”) never hits the NER model. Placeholder types (`PERSON`, `EMAIL_ADDRESS`) leak metadata to the API. A serious version would treat this as risk reduction, not anonymization: a threat model, residual-risk examples, maybe type-less tokens (`[E_1]`) so the API does not even learn the category.
+**Detection is a single small NER pass.** The BERT misses names, non-English text, and messy messages. Worth considering a regex second pass for emails/phones, and refuse to send when confidence is low.
 
-**The mapping is the real secret, and it only lives in Redux.** A refresh, another tab, or a second device and you cannot decode old replies — or you persist chats without the vault and they stay full of `[PERSON_1]`. Saving history would need an encrypted client vault (IndexedDB / passphrase) that the backend never sees. Sync across devices then becomes key management and recovery.
+**The mapping only lives in Redux** The mapping does not persist after a refresh. It might be ideal to flush all personal information for one time operations, but it does not fit a conversation workflow. Saving history would need an encrypted client vault (IndexedDB / passphrase).
 
-**Browser NER distributes compute, which is good; UX and quality do not come for free.** The ONNX file is downloaded per user, the pipeline is created on the send path, and a small BERT will miss names, non-English text, and messy messages. Worth considering: load the model once (Web Worker / SharedWorker), WebGPU, a second pass for emails/phones with regex, and a fallback that refuses to send when confidence is low. Moving detection to the server would be easier to operate and would destroy the main claim of this POC.
+**No conversation memory** A real product would keep the pseudonymized messages in the backend, in order to keep conversation memory.
 
-**`previous_response_id` couples the app to OpenAI’s stored session.** The GraphQL API is stateless and would scale horizontally; conversation memory lives at OpenAI and can expire or fail. A real product would keep a local (already pseudonymized) transcript and send a bounded window of messages itself.
-
-**Placeholders fight the model.** Long chats, invented tokens, and a naive `\[...\]` replace will smash markdown, citations, and code. A reserved token alphabet, round-trip tests, and treating an unknown placeholder in the reply as an error would be more robust.
-
-**Demo UX vs a real product.** The mapping footer is useful here and dangerous in a screenshot. Anything beyond a POC would need per-conversation maps, a “what left this machine” inspector, no PII in logs, auth, rate limits, and an explicit warning that this is not a HIPAA/GDPR control.
+**Placeholder format is too simple.** `[EMAIL_ADDRESS_1]` is easy to collide with markdown, citations, and user-typed brackets. A reserved token alphabet, round-trip tests, and treating an unknown placeholder in the reply as an error would be more robust.
