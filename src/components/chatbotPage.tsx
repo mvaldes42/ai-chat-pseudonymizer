@@ -7,11 +7,15 @@ import {
   ConversationHeader,
   Avatar,
 } from '@chatscope/chat-ui-kit-react'
+import { useEffect } from 'react'
 import { useAssistantStream } from './hooks/useAssistantStream'
 import { useDispatch, useSelector } from 'react-redux'
 import { addMessage, storePiiMapping } from '../store/messagesSlice'
 import type { RootState } from '../store/store'
-import { piiDetectAndReplace } from './utils/piiDetectAndReplace'
+import {
+  piiDetectAndReplace,
+  preloadPiiPipeline,
+} from './utils/piiDetectAndReplace'
 import { placeholderInText } from './utils/parsePlaceholder'
 
 export function ChatbotPage() {
@@ -27,6 +31,10 @@ export function ChatbotPage() {
   const piiMappingList = useSelector(
     (state: RootState) => state.messages.piiMappingList,
   )
+
+  useEffect(() => {
+    void preloadPiiPipeline()
+  }, [])
 
   async function handleSendMessage({ input }: { input: string }) {
     const { result: codedContent, mapping } = await piiDetectAndReplace({
