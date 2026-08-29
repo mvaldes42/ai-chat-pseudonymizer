@@ -1,61 +1,61 @@
-export type SenderType = "user" | "assistant";
+export type SenderType = 'user' | 'assistant'
 
 export type MessageType = {
-  id?: number;
-  content: string;
-  sender: SenderType;
-};
+  id?: number
+  content: string
+  sender: SenderType
+}
 
-export type PiiOccurrenceCountType = { type: string; count: number };
+export type PiiOccurrenceCountType = { type: string; count: number }
 
 export type MessagesState = {
-  messageList: MessageType[];
-  piiMappingList: PiiMappingType[];
-  piiOccurrencesCount: PiiOccurrenceCountType[];
-};
+  messageList: MessageType[]
+  piiMappingList: PiiMappingType[]
+  piiOccurrencesCount: PiiOccurrenceCountType[]
+}
 
 export type AssistantStreamRequestType = {
-  content: string;
-  previousResponseId: string | null;
-  piiMappingList: PiiMappingType[];
-};
+  content: string
+  previousResponseId: string | null
+  piiMappingList: PiiMappingType[]
+}
 
 export type MessageChunkType = {
-  delta?: string | null;
-  done: boolean;
-  responseId?: string | null;
-  error?: string | null;
-};
+  delta?: string | null
+  done: boolean
+  responseId?: string | null
+  error?: string | null
+}
 
 export type MessageStreamSubscriptionType = {
-  messageStream: MessageChunkType;
-};
+  messageStream: MessageChunkType
+}
 
 export type TokenType = {
-  index: number;
-  word: string;
-};
+  index: number
+  word: string
+}
 
 export type NerTokenType = TokenType & {
-  entity: string;
-};
+  entity: string
+}
 
 export type PiiGroupType = {
-  type: string;
-  words: string[];
-  indexes: number[];
-};
+  type: string
+  words: string[]
+  indexes: number[]
+}
 
 export type PiiSpanType = {
-  type: string;
-  start: number;
-  end: number;
-  value: string;
-  placeholder: string | null;
-  alreadyMapped: boolean;
-};
+  type: string
+  start: number
+  end: number
+  value: string
+  placeholder: string | null
+  alreadyMapped: boolean
+}
 
 export type PiiMappingType = {
-  placeholder: string;
-  value: string;
-};
+  placeholder: string
+  value: string
+}

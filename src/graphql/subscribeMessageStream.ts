@@ -1,6 +1,6 @@
-import { ApolloClient } from "@apollo/client";
-import type { MessageChunkType } from "../types";
-import { MESSAGE_STREAM_SUBSCRIPTION } from "./messageStreamSubscription";
+import { ApolloClient } from '@apollo/client'
+import type { MessageChunkType } from '../types'
+import { MESSAGE_STREAM_SUBSCRIPTION } from './messageStreamSubscription'
 
 export function subscribeMessageStream({
   client,
@@ -10,32 +10,32 @@ export function subscribeMessageStream({
   onError,
   signal,
 }: {
-  client: ApolloClient;
-  content: string;
-  previousResponseId: string | null;
-  onChunk: (chunk: MessageChunkType) => void;
-  onError?: (error: unknown) => void;
-  signal?: AbortSignal;
+  client: ApolloClient
+  content: string
+  previousResponseId: string | null
+  onChunk: (chunk: MessageChunkType) => void
+  onError?: (error: unknown) => void
+  signal?: AbortSignal
 }): Promise<string | null> {
   return new Promise<string | null>((resolve) => {
-    let settled = false;
+    let settled = false
 
     const finish = (responseId: string | null) => {
       if (settled) {
-        return;
+        return
       }
-      settled = true;
-      signal?.removeEventListener("abort", onAbort);
-      subscription.unsubscribe();
-      resolve(responseId);
-    };
+      settled = true
+      signal?.removeEventListener('abort', onAbort)
+      subscription.unsubscribe()
+      resolve(responseId)
+    }
 
-    const onAbort = () => finish(null);
+    const onAbort = () => finish(null)
 
     const fail = (error: unknown) => {
-      onError?.(error);
-      finish(null);
-    };
+      onError?.(error)
+      finish(null)
+    }
 
     const subscription = client
       .subscribe({
@@ -45,28 +45,28 @@ export function subscribeMessageStream({
       .subscribe({
         next: ({ data, error }) => {
           if (error) {
-            fail(error);
-            return;
+            fail(error)
+            return
           }
 
-          const chunk = data?.messageStream;
+          const chunk = data?.messageStream
           if (!chunk) {
-            return;
+            return
           }
 
-          onChunk(chunk);
+          onChunk(chunk)
 
           if (chunk.done) {
-            finish(chunk.responseId ?? null);
+            finish(chunk.responseId ?? null)
           }
         },
         error: fail,
-      });
+      })
 
     if (signal?.aborted) {
-      finish(null);
-      return;
+      finish(null)
+      return
     }
-    signal?.addEventListener("abort", onAbort);
-  });
+    signal?.addEventListener('abort', onAbort)
+  })
 }
